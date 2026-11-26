@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0a10" />
+  <title>研鑽 KENSAN — 意欲を、鍛え上げろ。</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">研</div>
+        <div class="brand-text">
+          <strong>研鑽</strong>
+          <span>KENSAN / STUDY DOJO</span>
+        </div>
+      </div>
+
+      <nav class="side-nav" id="side-nav">
+        <button class="nav-item active" data-view="home" data-action="nav">
+          <span class="nav-icon">⌂</span><span>ホーム</span>
+        </button>
+        <button class="nav-item" data-view="focus" data-action="nav">
+          <span class="nav-icon">◉</span><span>集中</span>
+        </button>
+        <button class="nav-item" data-view="quests" data-action="nav">
+          <span class="nav-icon">✦</span><span>課題</span>
+        </button>
+        <button class="nav-item" data-view="rank" data-action="nav">
+          <span class="nav-icon">♛</span><span>ランク</span>
+        </button>
+        <button class="nav-item" data-view="shop" data-action="nav">
+          <span class="nav-icon">◇</span><span>道場</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="driver-mini" id="driver-mini"></div>
+        <button class="profile-chip" data-action="profile">
+          <span class="avatar" id="side-avatar">🔥</span>
+          <span class="profile-chip-text">
+            <strong id="side-name">修行者</strong>
+            <small id="side-title">見習い</small>
+          </span>
+          <span class="cog">⚙</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ============ MAIN ============ -->
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="mobile-brand"><span class="brand-mark small">研</span><strong>研鑽</strong></div>
+          <div class="level-block">
+            <div class="level-row">
+              <span class="level-badge" id="level-badge">Lv.1</span>
+              <span class="level-title" id="level-title">見習い</span>
+            </div>
+            <div class="xp-track"><div class="xp-fill" id="xp-fill"></div></div>
+            <div class="xp-label" id="xp-label">0 / 200 XP</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="stat-pill streak" title="連続学習日数">
+            <span class="pill-icon">🔥</span><strong id="streak-val">0</strong><small>日</small>
+          </div>
+          <div class="stat-pill combo" title="現在のコンボ">
+            <span class="pill-icon">⚡</span><strong id="combo-val">x1.0</strong>
+          </div>
+          <div class="stat-pill gold" title="金貨">
+            <span class="pill-icon">◈</span><strong id="gold-val">0</strong>
+          </div>
+        </div>
+      </header>
+
+      <div class="view-container" id="view"></div>
+    </main>
+
+    <!-- ============ MOBILE NAV ============ -->
+    <nav class="mobile-nav" id="mobile-nav">
+      <button class="nav-item active" data-view="home" data-action="nav"><span class="nav-icon">⌂</span><span>ホーム</span></button>
+      <button class="nav-item" data-view="focus" data-action="nav"><span class="nav-icon">◉</span><span>集中</span></button>
+      <button class="nav-item nav-main" data-view="focus" data-action="quick-start"><span class="nav-icon">▶</span></button>
+      <button class="nav-item" data-view="quests" data-action="nav"><span class="nav-icon">✦</span><span>課題</span></button>
+      <button class="nav-item" data-view="rank" data-action="nav"><span class="nav-icon">♛</span><span>ランク</span></button>
+    </nav>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toast-root"></div>
+  <div id="fx-root"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
