@@ -24,6 +24,61 @@
     { key: 'obsession',  name: '執着',   en: 'OBSESSION',  icon: '🌀', color: 'var(--obsession)',  desc: '連続・コンボ・記録。やめられなくなるループ。' },
     { key: 'ego',        name: '自我',   en: 'EGO',        icon: '👑', color: 'var(--ego)',       desc: '称号と勝敗。自分の名を高めたい欲を燃料に。' },
   ];
+  // 「?」を押したときに表示する、各エンジンの現実的な上げ方 / 下げ方。
+  const DRIVER_HELP = {
+    motivation: {
+      up: [
+        ['集中セッションを完了', '+2'],
+        ['学習タスクを完了', '+2'],
+        ['タスクを登録する', '+1'],
+        ['休憩を完了する', '+1'],
+        ['デイリー試練の報酬を受け取る', '+5'],
+        ['ショップ：集中の香 / ご褒美チケット', '+2'],
+      ],
+      down: [],
+      tip: '「なぜ勉強するか」を1日1回声に出す。意味を思い出すほど、体が動き出す。',
+    },
+    discipline: {
+      up: [
+        ['集中セッションを完了', '+3'],
+        ['デイリー試練の報酬を受け取る', '+5'],
+        ['ショップ：自己啓発の書', '+3'],
+        ['ショップ：連続シールド', '+2'],
+      ],
+      down: [
+        ['集中を途中で諦める', '-3'],
+        ['1日以上空ける', '4つとも衰える'],
+      ],
+      tip: '毎日同じ時間に机へ座る。意志ではなく、習慣に任せるのが一番強い。',
+    },
+    obsession: {
+      up: [
+        ['集中セッションを完了（コンボ次第）', '+3〜+5'],
+        ['ライバルを追い抜く', '+3'],
+        ['デイリー試練の報酬を受け取る', '+5'],
+        ['ショップ：倍率ブースト', '+2'],
+      ],
+      down: [
+        ['集中を途中で諦める', '-5'],
+        ['1日以上空ける', '4つとも衰える'],
+      ],
+      tip: '連続日数とコンボを切らさない。記録が鎖になり、やめられなくなる。',
+    },
+    ego: {
+      up: [
+        ['集中セッションを完了', '+1'],
+        ['レベルアップする', '+5'],
+        ['学習タスクを完了', '+2'],
+        ['ライバルを追い抜く', '+4'],
+        ['デイリー試練の報酬を受け取る', '+5'],
+        ['ショップ：王冠の勲章', '+5'],
+      ],
+      down: [
+        ['1日以上空ける', '4つとも衰える'],
+      ],
+      tip: '自我的名刺を見て、なりたい自分を確認する。名に恥じない一日を選ぶ。',
+    },
+  };
   // 架空の修行者たち。一人ひとりに信念・学習スタイル・挑発文を持たせる。
   const RIVALS = [
     {
@@ -84,7 +139,7 @@
       version: 1,
       onboarded: false,
       tourDone: false,
-      profile: { name: '修行者', why: '将来の自分を誇れるように。', avatar: '🔥' },
+      profile: { name: '修行者', why: '', avatar: '🔥' },
       stats: {
         xp: 0, gold: 60,
         totalMinutes: 0, totalSessions: 0, tasksDone: 0,
@@ -545,7 +600,7 @@
         <div class="home-hero-main">
           <div class="hero-eyebrow">${dateLabel} ・ ${li.title.en}</div>
           <h1 class="home-greeting">${greet}、<span class="accent">${esc(state.profile.name)}</span>。</h1>
-          <p class="home-sub">「${esc(state.profile.why)}」</p>
+          ${state.profile.why ? `<p class="home-sub">「${esc(state.profile.why)}」</p>` : ''}
           <div class="home-actions">
             <button class="btn primary hero-cta" data-action="start-focus">▶ ${state.focus.running ? '集中を再開する' : `${state.settings.focusMin}分 集中する`}</button>
             <button class="btn" data-action="nav" data-view="quests">✓ 今日のタスク</button>
@@ -597,14 +652,15 @@
 
       <div class="cols-2" style="margin-top:18px">
         <div class="card">
-          <div class="section-title" style="--accent:var(--motivation);margin:0 0 14px"><h3>四つのエンジン</h3><span class="hint">勉強すると伸びる</span></div>
+          <div class="section-title" style="--accent:var(--motivation);margin:0 0 14px"><h3>四つのエンジン</h3><span class="hint">? で上げ方を見る</span></div>
           <div class="compact-drivers">
             ${DRIVERS.map((dr) => `
-              <div class="cd-item" title="${dr.desc}">
+              <div class="cd-item">
                 <div class="cd-top">
                   <span style="color:${dr.color}">${dr.icon}</span>
                   <strong>${dr.name}</strong>
                   <span class="mono" style="color:${dr.color}">${Math.round(state.drivers[dr.key])}</span>
+                  <button class="cd-help" data-action="driver-help" data-key="${dr.key}" aria-label="${dr.name}の上げ方を見る">?</button>
                 </div>
                 <div class="cd-bar"><i style="width:${state.drivers[dr.key]}%;background:${dr.color}"></i></div>
               </div>`).join('')}
@@ -745,7 +801,7 @@
               : `<button class="btn primary" data-action="start-timer">${f.remaining < f.minutes * 60 ? '▶ 再開する' : '▶ 集中を開始'}</button><button class="btn ghost" data-action="reset-timer">リセット</button>`}
           </div>
 
-          <div class="focus-why">「${esc(state.profile.why)}」</div>
+          ${state.profile.why ? `<div class="focus-why">「${esc(state.profile.why)}」</div>` : ''}
         </div>
 
         <div class="focus-side">
@@ -1006,13 +1062,6 @@
   function closeModal() { $('#modal-root').innerHTML = ''; }
 
   /* ---------------- interactive onboarding ---------------- */
-  const WHY_PRESETS = [
-    '合格して、未来を選べる自分になる',
-    '負けたくない',
-    '家族を安心させたい',
-    '自分の限界を知りたい',
-    '好きなことを仕事にしたい',
-  ];
   const OB_TOTAL = 5;
   let ob = null;
 
@@ -1020,7 +1069,7 @@
     ob = {
       step: 0,
       name: state.profile.name === '修行者' ? '' : state.profile.name,
-      why: state.profile.why === '将来の自分を誇れるように。' ? '' : state.profile.why,
+      why: state.profile.why || '',
       avatar: state.profile.avatar || '🔥',
       rivalId: state.duel.selected || 'hokuto',
       focusMin: state.settings.focusMin || 25,
@@ -1045,7 +1094,7 @@
       return `
         <h2 class="ob-title">ようこそ、研鑽へ。</h2>
         <p class="ob-sub">勉強したくなる仕掛けでできた道場です。まずは、あなたのことを教えてください。</p>
-        <div class="field"><label>呼び名</label><input id="ob-name" maxlength="20" placeholder="例：アキ" value="${esc(ob.name)}" /></div>
+        <div class="field"><label>呼び名</label><input id="ob-name" maxlength="20" value="${esc(ob.name)}" /></div>
         <div class="field"><label>分身（アイコン）</label><div class="avatar-picker">${AVATARS.map((a) => `<button class="avatar-option ${a === ob.avatar ? 'selected' : ''}" data-action="ob-avatar" data-avatar="${a}">${a}</button>`).join('')}</div></div>
         <div class="ob-note">💡 名前やアイコンは、あとから「⚙」でいつでも変更できます。</div>`;
     }
@@ -1053,8 +1102,7 @@
       return `
         <h2 class="ob-title">なぜ、勉強する？</h2>
         <p class="ob-sub">この答えが、やる気が落ちたときにあなたを連れ戻します。</p>
-        <div class="ob-chips">${WHY_PRESETS.map((w) => `<button class="ob-chip ${ob.why === w ? 'selected' : ''}" data-action="ob-why" data-why="${esc(w)}">${esc(w)}</button>`).join('')}</div>
-        <div class="field"><label>自分の言葉で（自由に）</label><textarea id="ob-why" placeholder="例：行きたい大学に合格して、家族を安心させたい">${esc(ob.why)}</textarea></div>
+        <div class="field"><label>自分の言葉で書いてください</label><textarea id="ob-why">${esc(ob.why)}</textarea></div>
         <div class="ob-note">💡 ここで書いた言葉は、ホームと集中画面に表示されます。</div>`;
     }
     if (ob.step === 2) {
@@ -1074,10 +1122,10 @@
         <h2 class="ob-title">集中の長さと、最初のタスク</h2>
         <p class="ob-sub">無理のない長さで始めましょう。あとから変えられます。</p>
         <div class="field"><label>1セッションの長さ</label><div class="ob-focus">${[15, 25, 45].map((m) => `<button class="ob-focus-opt ${ob.focusMin === m ? 'selected' : ''}" data-action="ob-focus" data-min="${m}"><strong>${m}分</strong><small>${m === 15 ? '軽め' : m === 25 ? '標準' : 'しっかり'}</small></button>`).join('')}</div></div>
-        <div class="field"><label>最初のタスク（任意）</label><input id="ob-task" maxlength="60" placeholder="例：英単語 50個を覚える" value="${esc(ob.taskTitle)}" /></div>
+        <div class="field"><label>最初のタスク（任意）</label><input id="ob-task" maxlength="60" value="${esc(ob.taskTitle)}" /></div>
         <div style="display:flex;gap:8px">
-          <input class="intent-input" id="ob-task-subject" placeholder="科目" style="flex:1" value="${esc(ob.taskSubject)}" />
-          <select class="intent-input" id="ob-task-diff" style="flex:0 0 104px">
+          <input class="intent-input" id="ob-task-subject" aria-label="科目" style="flex:1" value="${esc(ob.taskSubject)}" />
+          <select class="intent-input" id="ob-task-diff" aria-label="難易度" style="flex:0 0 104px">
             <option value="1" ${ob.difficulty === 1 ? 'selected' : ''}>★ 易</option>
             <option value="2" ${ob.difficulty === 2 ? 'selected' : ''}>★★ 中</option>
             <option value="3" ${ob.difficulty === 3 ? 'selected' : ''}>★★★ 難</option>
@@ -1091,7 +1139,7 @@
       <p class="ob-sub">この設定で道場の門をくぐります。</p>
       <div class="ob-summary">
         <div><span>名前</span><strong>${ob.avatar} ${esc(ob.name || '修行者')}</strong></div>
-        <div><span>なぜ</span><strong>「${esc(ob.why || '将来の自分を誇れるように。')}」</strong></div>
+        <div><span>なぜ</span><strong>${ob.why ? `「${esc(ob.why)}」` : '未入力'}</strong></div>
         <div><span>ライバル</span><strong>${esc(rival.name)}（${esc(rival.title)}）</strong></div>
         <div><span>集中</span><strong>${ob.focusMin} 分</strong></div>
         <div><span>最初のタスク</span><strong>${esc(ob.taskTitle || 'なし')}</strong></div>
@@ -1122,7 +1170,7 @@
 
   function applyOnboarding() {
     state.profile.name = ob.name || '修行者';
-    state.profile.why = ob.why || '将来の自分を誇れるように。';
+    state.profile.why = ob.why || '';
     state.profile.avatar = ob.avatar || '🔥';
     state.settings.focusMin = ob.focusMin || 25;
     state.duel.selected = ob.rivalId || 'hokuto';
@@ -1213,6 +1261,39 @@
     else toast('準備完了。いつでも「集中する」から始められます。');
   }
 
+  function driverHelpModal(key) {
+    const dr = DRIVERS.find((d) => d.key === key);
+    const help = DRIVER_HELP[key];
+    if (!dr || !help) return;
+    const val = Math.round(state.drivers[key]);
+    openModal(`
+      <div class="dh-head">
+        <span class="dh-icon" style="color:${dr.color}">${dr.icon}</span>
+        <div class="dh-title">
+          <h2>${dr.name} <small>${dr.en}</small></h2>
+          <p>${dr.desc}</p>
+        </div>
+        <div class="dh-value" style="color:${dr.color}">${val}<small>/100</small></div>
+      </div>
+      <div class="dh-bar"><i style="width:${val}%;background:${dr.color}"></i></div>
+      <div class="dh-section">
+        <h3>上げ方</h3>
+        <ul class="dh-list">
+          ${help.up.map(([label, amount]) => `<li><span>${label}</span><strong>${amount}</strong></li>`).join('')}
+        </ul>
+      </div>
+      ${help.down && help.down.length ? `
+      <div class="dh-section">
+        <h3>下げる要因</h3>
+        <ul class="dh-list down">
+          ${help.down.map(([label, amount]) => `<li><span>${label}</span><strong>${amount}</strong></li>`).join('')}
+        </ul>
+      </div>` : ''}
+      <div class="dh-tip">💡 ${help.tip}</div>
+      <div class="modal-actions"><button class="btn primary" data-action="close-modal">わかった</button></div>
+    `);
+  }
+
   function profileModal() {
     openModal(`
       <h2>⚙ 修行者の設定</h2>
@@ -1249,8 +1330,8 @@
       `意欲 ${Math.round(state.drivers.motivation)} | 規律 ${Math.round(state.drivers.discipline)} | 執着 ${Math.round(state.drivers.obsession)} | 自我 ${Math.round(state.drivers.ego)}`,
       `連続 ${state.stats.streak}日 · 通算 ${state.stats.totalMinutes}分 · 対決 ${rec.wins}勝${rec.losses}敗`,
       `ライバル: ${rival.name}（${rival.title}）`,
-      `「${state.profile.why}」`,
-    ].join('\n');
+      state.profile.why ? `「${state.profile.why}」` : null,
+    ].filter(Boolean).join('\n');
     openModal(`
       <div class="celebrate">
         <div style="padding:24px;border-radius:18px;border:1px solid rgba(255,201,74,.35);background:linear-gradient(145deg,rgba(255,201,74,.1),rgba(181,107,255,.08));text-align:left">
@@ -1265,7 +1346,7 @@
             連続 ${state.stats.streak}日 / 通算 ${state.stats.totalMinutes}分<br>
             対決 ${rec.wins}勝${rec.losses}敗 / 最高コンボ ${state.stats.bestCombo}<br>
             ライバル：${esc(rival.name)}（${esc(rival.title)}）<br>
-            「${esc(state.profile.why)}」
+            ${state.profile.why ? `「${esc(state.profile.why)}」` : ''}
           </div>
         </div>
         <div class="modal-actions" style="justify-content:center">
@@ -1348,6 +1429,7 @@
       case 'continue-after-session': closeModal(); go('focus'); setMode('short'); startTimer(); break;
       case 'continue-focus': closeModal(); go('focus'); setMode('focus'); startTimer(); break;
       case 'close-modal': closeModal(); break;
+      case 'driver-help': driverHelpModal(el.dataset.key); break;
       case 'backdrop': if (e.target === el && modalOptions.closable) closeModal(); break;
       case 'profile': profileModal(); break;
       case 'pick-avatar': {
@@ -1358,7 +1440,7 @@
       }
       case 'save-profile': {
         state.profile.name = $('#prof-name').value.trim() || '修行者';
-        state.profile.why = $('#prof-why').value.trim() || '将来の自分を誇れるように。';
+        state.profile.why = $('#prof-why').value.trim();
         state.profile.avatar = $('#prof-avatars .avatar-option.selected')?.dataset.avatar || state.profile.avatar;
         state.settings.focusMin = Number($('#set-focus').value);
         state.settings.breakMin = Number($('#set-break').value);
@@ -1392,7 +1474,6 @@
         toast('設定は「⚙」からいつでも変更できます');
         break;
       case 'ob-avatar': captureObStep(); ob.avatar = el.dataset.avatar; renderOnboarding(); break;
-      case 'ob-why': captureObStep(); ob.why = el.dataset.why; renderOnboarding(); break;
       case 'ob-rival': captureObStep(); ob.rivalId = el.dataset.id; renderOnboarding(); break;
       case 'ob-focus': captureObStep(); ob.focusMin = Number(el.dataset.min); renderOnboarding(); break;
       case 'ob-finish':
