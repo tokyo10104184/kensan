@@ -30,42 +30,42 @@
       id: 'kageyama', name: '影山 蓮', avatar: '🥷', title: '修羅', color: '#ff6a4d',
       quote: '「限界は、自分で決めた線のことだ。」', style: '深夜の鬼集中・難問を潰す型',
       lore: '元・東大落ち。あの日から毎日14時間、机に向かい続けている。',
-      base: 138, growth: 0.08, unlock: 1,
+      base: 90, growth: 0.08, unlock: 1,
       taunts: ['「その程度で満足してるの？ 私はまだ終わっていない。」', '「お前が寝ている間に、私は三章終わらせた。」', '「痛いほど集中しろ。それが唯一の近道だ。」'],
     },
     {
       id: 'hokuto', name: '北斗', avatar: '🐺', title: '孤高の狼', color: '#46c9ff',
       quote: '「誰にも追わせない。それが私の流儀。」', style: '朝5時起き・ルーチン完全遵守型',
       lore: '誰とも群さない。だが、その孤独な朝の時間が彼を最強にしている。',
-      base: 116, growth: 0.08, unlock: 1,
+      base: 75, growth: 0.08, unlock: 1,
       taunts: ['「ルーチンを崩した瞬間、お前は負けてる。」', '「根性じゃない。毎朝同じ時間に席に着くだけだ。」', '「今日の私を超えられないなら、明日も超えられないぞ。」'],
     },
     {
       id: 'chiya', name: '千夜', avatar: '🦉', title: '夜の読書鬼', color: '#b56bff',
       quote: '「静かな夜が、いちばん正直だ。」', style: '夜型・インプット量で押し切る型',
       lore: '図書館の閉館ギリギリまで居座る。ノートはいつもびっしりだ。',
-      base: 94, growth: 0.05, unlock: 2,
+      base: 105, growth: 0.05, unlock: 2,
       taunts: ['「記録は裏切らない。お前の意志は裏切るだろう。」', '「私のノートの厚さと、お前のを比べてみろ。」', '「今ここで止めれば、この選択は明日も続く。」'],
     },
     {
       id: 'mika', name: 'Mika', avatar: '🦊', title: '才女', color: '#ffc94a',
       quote: '「効率が悪い努力は、ただの自己満足。」', style: '短時間集中・メリハリ型',
       lore: '短い集中を積み重ねて、他人の倍の成果を出す。遊ぶ時は心から遊ぶ。',
-      base: 78, growth: 0.04, unlock: 3,
+      base: 115, growth: 0.04, unlock: 3,
       taunts: ['「休憩は私が取る。お前は今、盤面に立っている。」', '「ダラダラ長くやるより、短く斬って寝ろ。」', '「私の集中は、途切れない。途切れるのはお前だ。」'],
     },
     {
       id: 'sora', name: 'SORA', avatar: '🦅', title: '野心家', color: '#7dffb0',
       quote: '「トップになるために、今日も一歩。」', style: '目標逆算・スピード重視型',
       lore: '年齢は若い。だが、目的地だけは誰よりはっきり見ている。',
-      base: 61, growth: 0.12, unlock: 4,
+      base: 130, growth: 0.12, unlock: 4,
       taunts: ['「才能じゃない。回数だ。今の差は、そのまま積み上がる。」', '「我先に、だ。置いていくぞ。」', '「その溜め息、次のセッションに変えてこい。」'],
     },
     {
       id: 'mumei', name: '無名', avatar: '🌑', title: '???', color: '#9a9aae',
       quote: '「……」', style: '正体不明・ひたすら静かに積み上げる型',
       lore: '誰も顔を見たことがない。ただ、記録だけが毎日更新されていく。',
-      base: 40, growth: 0.18, unlock: 6,
+      base: 150, growth: 0.18, unlock: 6,
       taunts: ['「……（何も言わない。ただ記録が差を語る。）」', '「…………」', '「……お前を、追い抜く。」'],
     },
   ];
@@ -98,7 +98,7 @@
       questsClaimed: {},
       focus: { mode: 'focus', minutes: 25, remaining: 25 * 60, running: false, endAt: null, intent: '' },
       settings: { sound: true, notify: false, focusMin: 25, breakMin: 5, longBreakMin: 15 },
-      duel: { selected: 'kageyama', results: {}, lastChecked: null },
+      duel: { selected: 'hokuto', results: {}, lastChecked: null },
       view: 'home',
     };
   }
@@ -345,8 +345,9 @@
         </div>
         <p class="muted" style="font-size:12px">${nextTitle() ? `次の称号「${nextTitle().name}」まであと ${nextTitle().lv - levelInfo().level} レベル。` : 'すでに伝説。その名は語り継がれる。'}</p>
         <div class="modal-actions center" style="justify-content:center">
-          <button class="btn primary" data-action="continue-after-session">次の集中へ</button>
-          <button class="btn ghost" data-action="close-modal">一度泥を落とす</button>
+          <button class="btn" data-action="continue-after-session">☕ ${state.settings.breakMin}分休憩する</button>
+          <button class="btn primary" data-action="continue-focus">▶ 続けて集中する</button>
+          <button class="btn ghost" data-action="close-modal">閉じる</button>
         </div>
       </div>
     `);
@@ -403,7 +404,7 @@
     const n = dayNum(key);
     const i = RIVALS.indexOf(rival);
     const noise = ((n * 7 + i * 13) % 41) - 20;
-    const growth = Math.min(60, Math.max(0, n - EPOCH) * (rival.growth || 0));
+    const growth = Math.min(25, Math.max(0, n - EPOCH) * (rival.growth || 0));
     return Math.max(10, Math.round(rival.base + growth + noise));
   }
   function duelStatus() {
@@ -480,6 +481,8 @@
     const li = levelInfo();
     $('#level-badge').textContent = `Lv.${li.level}`;
     $('#level-title').textContent = li.title.name;
+    const mobileLevel = $('#mobile-level');
+    if (mobileLevel) mobileLevel.textContent = `Lv.${li.level}`;
     $('#xp-fill').style.width = li.pct + '%';
     $('#xp-label').textContent = `${li.into} / ${li.need} XP`;
     $('#streak-val').textContent = state.stats.streak;
@@ -527,102 +530,142 @@
     const target = 4;
     const pct = Math.min(100, (t.sessions / target) * 100);
     const duel = duelStatus();
-    const openTasks = state.tasks.filter((x) => !x.done).slice(0, 3);
-
-    const questRows = QUESTS.slice(0, 3).map((q) => questRowHtml(q)).join('');
-    const heat = heatmapHtml(11);
+    const openTasks = state.tasks.filter((x) => !x.done);
+    const claimed = claimedList();
+    const questsDone = QUESTS.filter((q) => claimed.includes(q.id)).length;
+    const d = new Date();
+    const dateLabel = `${d.getMonth() + 1}/${d.getDate()} (${'日月火水木金土'[d.getDay()]})`;
+    const hour = d.getHours();
+    const greet = hour < 11 ? 'おはよう' : hour < 18 ? 'こんにちは' : 'こんばんは';
+    const previewTasks = openTasks.slice(0, 2);
 
     return `
-      <div class="hero">
-        <div>
-          <div class="hero-eyebrow">WELCOME BACK, ${esc(state.profile.name).toUpperCase()}</div>
-          <h1 class="hero-name">今日も、<span class="accent">${li.title.name}</span>として<br>胸を張れる一日に。</h1>
-          <div class="hero-title-line">Lv.${li.level} ${li.title.en} ・ 連続 ${state.stats.streak} 日 ・ 通算 ${state.stats.totalSessions} セッション</div>
-          <div class="hero-why">
-            <span class="quote">“</span>
-            <div><p>${esc(state.profile.why)}</p><small>MY REASON — 迷ったら、ここに戻ってこい</small></div>
-          </div>
-          <div class="hero-actions">
-            <button class="btn hero-cta" data-action="start-focus">▶ ${state.focus.running ? '集中を再開する' : '集中を始める'}</button>
-            <button class="btn" data-action="nav" data-view="quests">✦ 今日の試練</button>
-            <button class="btn ghost" data-action="ego-card">👑 名刺を見る</button>
+      <div class="home-hero">
+        <div class="home-hero-main">
+          <div class="hero-eyebrow">${dateLabel} ・ ${li.title.en}</div>
+          <h1 class="home-greeting">${greet}、<span class="accent">${esc(state.profile.name)}</span>。</h1>
+          <p class="home-sub">「${esc(state.profile.why)}」</p>
+          <div class="home-actions">
+            <button class="btn primary hero-cta" data-action="start-focus">▶ ${state.focus.running ? '集中を再開する' : `${state.settings.focusMin}分 集中する`}</button>
+            <button class="btn" data-action="nav" data-view="quests">✓ 今日のタスク</button>
           </div>
         </div>
-        <div class="hero-side">
-          <div class="card" style="background:rgba(0,0,0,.2)">
-            <div class="daily-ring-wrap">
-              <div class="ring" style="--p:${pct}"><div class="ring-inner"><strong>${t.sessions}<span style="font-size:12px;color:var(--muted)">/${target}</span></strong><span>TODAY</span></div></div>
-              <div class="daily-info">
-                <h4>今日のノルマ</h4>
-                <p>あと <span class="big">${Math.max(0, target - t.sessions)}</span> セッションで<br>一日が完成する。</p>
-                <div class="tag">🔥 ${t.minutes}分 集中済み</div>
-              </div>
-            </div>
+        <div class="home-ring">
+          <div class="ring" style="--p:${pct}">
+            <div class="ring-inner"><strong>${t.sessions}<span style="font-size:12px;color:var(--muted)">/${target}</span></strong><span>SESSION</span></div>
           </div>
-          <div class="card" style="background:linear-gradient(135deg,rgba(70,201,255,.08),rgba(0,0,0,.2))">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-              <span style="font-size:11px;color:var(--muted)">今日のライバル</span>
-              <span class="tag">${duel.win ? '👑 勝ち' : duel.close ? '⚔ 接戦' : '🔥 追いかける'}</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-              <span style="font-size:26px">${duel.rival.avatar}</span>
-              <div style="flex:1">
-                <div style="font-size:13px;font-weight:800">${esc(duel.rival.name)} <span style="font-size:10px;color:var(--muted)">${esc(duel.rival.title)}</span></div>
-                <div class="muted" style="font-size:10px">今日 ${duel.rivalMin} 分 ・ あなた ${duel.me} 分</div>
-              </div>
-            </div>
-            <p style="margin:0;font-size:12px;line-height:1.6">${rivalTaunt(duel.rival)}</p>
-            <button class="btn small ghost" style="margin-top:12px" data-action="nav" data-view="rivals">${duel.win ? '勝敗を見る' : `あと${duel.gap}分で逆転 →`}</button>
-          </div>
+          <div class="home-ring-label">今日の目標<br><strong>あと ${Math.max(0, target - t.sessions)} セッション</strong></div>
         </div>
       </div>
 
-      <div class="section-title" style="--accent:var(--motivation)"><h3>四つのエンジン</h3><span class="hint">学習を回す4つの欲</span></div>
-      <div class="drivers-grid">
-        ${DRIVERS.map((d) => `
-          <div class="driver-card" style="--c:${d.color}">
-            <div class="driver-head">
-              <div><div class="driver-icon">${d.icon}</div><div class="driver-name">${d.name} <span class="driver-en">${d.en}</span></div></div>
-              <div class="driver-score">${Math.round(state.drivers[d.key])}</div>
-            </div>
-            <div class="driver-bar"><i style="width:${state.drivers[d.key]}%"></i></div>
-            <div class="driver-desc">${d.desc}</div>
-          </div>`).join('')}
+      <div class="quick-stats">
+        <button class="stat-tile" data-action="nav" data-view="focus">
+          <span class="stat-tile-icon" style="color:var(--motivation)">🔥</span>
+          <span class="stat-tile-value">${t.minutes}<small>分</small></span>
+          <span class="stat-tile-label">今日の集中</span>
+        </button>
+        <button class="stat-tile" data-action="nav" data-view="focus">
+          <span class="stat-tile-icon" style="color:var(--discipline)">⚡</span>
+          <span class="stat-tile-value">x${comboMult().toFixed(1)}</span>
+          <span class="stat-tile-label">コンボ倍率</span>
+        </button>
+        <button class="stat-tile" data-action="nav" data-view="rivals">
+          <span class="stat-tile-icon" style="color:var(--obsession)">⚔</span>
+          <span class="stat-tile-value" style="color:${duel.win ? 'var(--ego)' : 'var(--text)'}">${duel.win ? '勝ち' : `あと${duel.gap}分`}</span>
+          <span class="stat-tile-label">${esc(duel.rival.name)} との差</span>
+        </button>
+        <button class="stat-tile" data-action="nav" data-view="shop">
+          <span class="stat-tile-icon" style="color:var(--ego)">◈</span>
+          <span class="stat-tile-value">${state.stats.gold}</span>
+          <span class="stat-tile-label">金貨</span>
+        </button>
       </div>
 
-      <div class="section-title" style="--accent:var(--discipline)"><h3>今日の試練</h3><button class="btn small ghost" data-action="nav" data-view="quests">すべて見る →</button></div>
-      <div class="card">${questRows}</div>
+      <div class="section-title" style="--accent:var(--discipline)"><h3>今日やること</h3><button class="btn small ghost" data-action="nav" data-view="quests">すべて見る →</button></div>
+      <div class="card todo-card">
+        <div class="todo-group">
+          <div class="todo-group-head"><span>デイリー試練</span><span class="dim">${questsDone} / ${QUESTS.length} 達成</span></div>
+          ${QUESTS.slice(0, 3).map(questRowHtml).join('')}
+        </div>
+        <div class="todo-group">
+          <div class="todo-group-head"><span>自分のタスク</span><span class="dim">${openTasks.length} 件 未完了</span></div>
+          ${previewTasks.length ? previewTasks.map((task) => taskRowHtml(task)).join('') : `<div class="empty small"><span class="emoji">📝</span><p>まだタスクがない。今日やることを1つだけ書き出そう。</p></div>`}
+          <button class="btn small ghost block" data-action="nav" data-view="quests">＋ タスクを追加する</button>
+        </div>
+      </div>
 
       <div class="cols-2" style="margin-top:18px">
         <div class="card">
-          <div class="section-title" style="--accent:var(--obsession);margin:0 0 14px"><h3>執着の記録</h3><span class="hint">直近11週間</span></div>
-          ${heat}
-          <div class="stat-grid" style="margin-top:16px;grid-template-columns:repeat(3,1fr)">
-            <div class="stat-box"><div class="label">連続</div><div class="value" style="color:var(--motivation)">${state.stats.streak}</div><div class="sub">日</div></div>
-            <div class="stat-box"><div class="label">最長</div><div class="value" style="color:var(--obsession)">${state.stats.longestStreak}</div><div class="sub">日</div></div>
-            <div class="stat-box"><div class="label">コンボ</div><div class="value" style="color:var(--ego)">${state.stats.bestCombo}</div><div class="sub">最高</div></div>
+          <div class="section-title" style="--accent:var(--motivation);margin:0 0 14px"><h3>四つのエンジン</h3><span class="hint">勉強すると伸びる</span></div>
+          <div class="compact-drivers">
+            ${DRIVERS.map((dr) => `
+              <div class="cd-item" title="${dr.desc}">
+                <div class="cd-top">
+                  <span style="color:${dr.color}">${dr.icon}</span>
+                  <strong>${dr.name}</strong>
+                  <span class="mono" style="color:${dr.color}">${Math.round(state.drivers[dr.key])}</span>
+                </div>
+                <div class="cd-bar"><i style="width:${state.drivers[dr.key]}%;background:${dr.color}"></i></div>
+              </div>`).join('')}
           </div>
+          <p class="dim" style="font-size:10px;margin:12px 0 0;line-height:1.6">集中するほど伸び、サボると少しずつ衰える。4つを切らすな。</p>
         </div>
         <div class="card">
-          <div class="section-title" style="--accent:var(--motivation);margin:0 0 14px"><h3>次の一手</h3><button class="btn small ghost" data-action="nav" data-view="quests">管理 →</button></div>
-          ${openTasks.length ? openTasks.map((task) => `
-            <div class="task-row">
-              <button class="task-check" data-action="toggle-task" data-id="${task.id}">✓</button>
-              <div class="task-body"><div class="task-title">${esc(task.title)}</div><div class="task-meta"><span>${esc(task.subject)}</span><span class="diff-${task.difficulty}">${'★'.repeat(task.difficulty)}</span></div></div>
-            </div>`).join('') : '<div class="empty"><span class="emoji">📝</span><p>まだ課題がありません。<br>今の自分に、次の一手を与えろ。</p><button class="btn small primary" data-action="nav" data-view="quests">課題を追加</button></div>'}
-          <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
-            <div style="font-size:11px;color:var(--muted);margin-bottom:8px">所有アイテム</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <span class="tag">🛡️ シールド ${state.stats.shields}</span>
-              <span class="tag">⚡ ブースト ${state.stats.boost ? 'ON' : 'OFF'}</span>
-              <span class="tag">🎟️ チケット ${state.stats.tickets}</span>
-            </div>
+          <div class="section-title" style="--accent:var(--obsession);margin:0 0 14px"><h3>今週の集中</h3><span class="hint">${state.stats.streak}日連続</span></div>
+          ${weekBarsHtml()}
+          <div style="display:flex;justify-content:space-between;margin-top:14px;font-size:11px;color:var(--muted)">
+            <span>今週 ${weekMinutes()} 分</span>
+            <span>最高 ${state.stats.bestCombo} コンボ</span>
           </div>
         </div>
+      </div>
+
+      <div class="home-footer">
+        <button class="btn small ghost" data-action="ego-card">👑 自我的名刺を見る</button>
+        <span class="dim" style="font-size:10px">🛡️ シールド ${state.stats.shields} 枚 ・ 🎟️ チケット ${state.stats.tickets} 枚</span>
       </div>
     `;
   }
 
+  function taskRowHtml(task) {
+    return `
+      <div class="task-row ${task.done ? 'done' : ''}">
+        <button class="task-check" data-action="toggle-task" data-id="${task.id}" aria-label="完了">✓</button>
+        <div class="task-body">
+          <div class="task-title">${esc(task.title)}</div>
+          <div class="task-meta"><span>${esc(task.subject || '科目なし')}</span><span class="diff-${task.difficulty}">${'★'.repeat(task.difficulty)}</span></div>
+        </div>
+        <button class="icon-btn" data-action="delete-task" data-id="${task.id}" aria-label="削除">✕</button>
+      </div>`;
+  }
+
+  function weekBarsHtml() {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const k = todayKey(d);
+      days.push({ k, m: state.history[k] ? state.history[k].minutes : 0, label: '日月火水木金土'[d.getDay()], today: i === 0 });
+    }
+    const max = Math.max(25, ...days.map((x) => x.m));
+    return `<div class="week-bars">${days.map((x) => `
+      <div class="week-bar ${x.today ? 'today' : ''}" title="${x.k} · ${x.m}分">
+        <div class="week-bar-track"><i style="height:${Math.max(4, (x.m / max) * 100)}%"></i></div>
+        <span>${x.label}</span>
+        <small>${x.m}</small>
+      </div>`).join('')}</div>`;
+  }
+
+  function weekMinutes() {
+    let sum = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const k = todayKey(d);
+      sum += state.history[k] ? state.history[k].minutes : 0;
+    }
+    return sum;
+  }
   function questRowHtml(q) {
     const p = Math.min(q.target, q.get());
     const done = p >= q.target;
@@ -665,49 +708,58 @@
   /* ---------- FOCUS ---------- */
   function viewFocus() {
     const f = state.focus;
+    const t = todayStats();
+    const duel = duelStatus();
     const modeName = f.mode === 'focus' ? '集中' : f.mode === 'short' ? '短い休憩' : '長い休憩';
     const color = f.mode === 'focus' ? 'var(--motivation)' : f.mode === 'short' ? 'var(--discipline)' : 'var(--obsession)';
-    const t = todayStats();
+    const rewardXp = Math.round(f.minutes * 2 * comboMult() * (state.stats.boost ? 2 : 1));
+    const rewardGold = Math.round(f.minutes * 1.2 * comboMult());
     return `
       <div class="focus-layout">
         <div class="focus-stage">
+          <div class="focus-step">
+            <label for="intent-input">このセッションでやること</label>
+            <input class="intent-input" id="intent-input" placeholder="例：英文法 第3章を1周する" value="${esc(f.intent)}" data-action="intent" />
+          </div>
+
           <div class="mode-tabs">
             <button class="mode-tab ${f.mode === 'focus' ? 'active' : ''}" data-action="mode" data-mode="focus">集中 ${state.settings.focusMin}分</button>
             <button class="mode-tab ${f.mode === 'short' ? 'active' : ''}" data-action="mode" data-mode="short">休憩 ${state.settings.breakMin}分</button>
             <button class="mode-tab ${f.mode === 'long' ? 'active' : ''}" data-action="mode" data-mode="long">長休憩 ${state.settings.longBreakMin}分</button>
           </div>
+
           <div class="timer-ring" id="timer-ring" style="--timer-c:${color}">
             <div class="timer-inner">
               <div class="timer-time" id="timer-time">${fmtTime(f.remaining)}</div>
-              <div class="timer-status" id="timer-status">${f.running ? modeName + '中' : 'READY — 覚悟を決めろ'}</div>
-              <div class="timer-combo">⚡ コンボ x${comboMult().toFixed(1)} · ${state.stats.streak}日連続</div>
+              <div class="timer-status" id="timer-status">${f.running ? modeName + '中' : '準備完了'}</div>
+              <div class="timer-combo">⚡ x${comboMult().toFixed(1)} ・ 🔥 ${state.stats.streak}日連続</div>
             </div>
           </div>
+
+          <div class="focus-reward-inline">完了すると <strong>+${rewardXp} XP</strong> ・ <strong>+${rewardGold} ◈</strong>${state.stats.boost ? ' ・ ⚡ブースト中' : ''}</div>
+
           <div class="timer-controls">
             ${f.running
               ? `<button class="btn" data-action="pause">⏸ 一時停止</button><button class="btn ghost" data-action="give-up">諦める</button>`
-              : `<button class="btn primary" data-action="start-timer">${f.remaining < f.minutes * 60 ? '▶ 再開する' : '▶ 開始する'}</button><button class="btn ghost" data-action="reset-timer">リセット</button>`}
+              : `<button class="btn primary" data-action="start-timer">${f.remaining < f.minutes * 60 ? '▶ 再開する' : '▶ 集中を開始'}</button><button class="btn ghost" data-action="reset-timer">リセット</button>`}
           </div>
-          <div class="focus-why">「${esc(state.profile.why)}」<br><strong>この時間が、未来のあなたの顔をつくる。</strong></div>
+
+          <div class="focus-why">「${esc(state.profile.why)}」</div>
         </div>
+
         <div class="focus-side">
           <div class="card">
-            <div class="section-title" style="--accent:var(--obsession);margin:0 0 12px"><h3>集中の的</h3></div>
-            <input class="intent-input" id="intent-input" placeholder="例：英文法 第3章を攻略する" value="${esc(f.intent)}" data-action="intent" />
-            <div class="dim" style="font-size:10px;margin-top:8px">何を攻めるか決めてから、タイマーを押せ。</div>
-          </div>
-          <div class="card">
-            <div class="section-title" style="--accent:var(--discipline);margin:0 0 8px"><h3>今日の記録</h3></div>
-            <div class="session-stat"><span>完了セッション</span><strong>${t.sessions} 回</strong></div>
+            <div class="side-title-row"><h3>今日の記録</h3><span class="tag">🔥 ${state.stats.streak}日連続</span></div>
             <div class="session-stat"><span>集中時間</span><strong>${t.minutes} 分</strong></div>
-            <div class="session-stat"><span>獲得XP</span><strong class="gold-text">${t.xp}</strong></div>
-            <div class="session-stat"><span>現在のコンボ</span><strong style="color:var(--obsession)">${state.stats.combo}</strong></div>
+            <div class="session-stat"><span>セッション</span><strong>${t.sessions} 回</strong></div>
+            <div class="session-stat"><span>コンボ倍率</span><strong style="color:var(--obsession)">x${comboMult().toFixed(1)}</strong></div>
+            <div class="session-stat"><span>今日のライバル</span><strong>${esc(duel.rival.name)} ${duel.rivalMin}分</strong></div>
           </div>
-          <div class="card">
-            <div class="section-title" style="--accent:var(--motivation);margin:0 0 8px"><h3>報酬の予定</h3></div>
-            <div class="session-stat"><span>獲得XP</span><strong class="gold-text">+${Math.round(state.settings.focusMin * 2 * comboMult() * (state.stats.boost ? 2 : 1))}</strong></div>
-            <div class="session-stat"><span>獲得金貨</span><strong class="gold-text">+${Math.round(state.settings.focusMin * 1.2 * comboMult())}</strong></div>
-            <div class="dim" style="font-size:10px;margin-top:10px">${state.stats.boost ? '⚡ ブースト適用中 — 今が稼ぎ時！' : 'コンボが続くほど報酬も膨らむ。'}</div>
+
+          <div class="card focus-tip">
+            <div class="tip-label">ライバルからの一言</div>
+            <p>${rivalTaunt(duel.rival)}</p>
+            <button class="btn small ghost" data-action="nav" data-view="rivals">対決を見る →</button>
           </div>
         </div>
       </div>
@@ -723,61 +775,50 @@
     timeEl.textContent = fmtTime(f.remaining);
     const status = $('#timer-status');
     if (status) status.textContent = f.running
-      ? (f.mode === 'focus' ? '集中中 — 止めるな' : '休憩中 — 深呼吸しろ')
-      : (f.remaining < total ? 'PAUSED — すぐ戻れ' : 'READY — 覚悟を決めろ');
+      ? (f.mode === 'focus' ? '集中中 — 止めない' : '休憩中 — 深呼吸')
+      : (f.remaining < total ? '一時停止中' : '準備完了');
   }
 
-  /* ---------- QUESTS ---------- */
+  /* ---------- TASKS ---------- */
   function viewQuests() {
     const t = todayStats();
+    const open = state.tasks.filter((x) => !x.done);
     return `
-      <div class="stat-grid">
-        <div class="stat-box"><div class="label">TODAY'S FOCUS</div><div class="value" style="color:var(--motivation)">${t.minutes}<span style="font-size:12px">分</span></div><div class="sub">今日の集中</div></div>
-        <div class="stat-box"><div class="label">SESSIONS</div><div class="value" style="color:var(--discipline)">${t.sessions}</div><div class="sub">完了セッション</div></div>
-        <div class="stat-box"><div class="label">TASKS CLEARED</div><div class="value" style="color:var(--obsession)">${t.tasks}</div><div class="sub">片付けた課題</div></div>
-        <div class="stat-box"><div class="label">COMBO</div><div class="value" style="color:var(--ego)">x${comboMult().toFixed(1)}</div><div class="sub">現在の倍率</div></div>
+      <div class="page-head">
+        <div><h1>タスク</h1><p class="muted">今日やることを、一つずつ片付ける。</p></div>
+        <div class="summary-chips">
+          <span class="chip">🔥 ${t.minutes} 分</span>
+          <span class="chip">✓ ${t.tasks} 件完了</span>
+          <span class="chip">⚡ x${comboMult().toFixed(1)}</span>
+        </div>
       </div>
 
-      <div class="section-title" style="--accent:var(--discipline)"><h3>今日の試練</h3><span class="hint">毎日リセットされる。取りこぼすな。</span></div>
+      <div class="section-title" style="--accent:var(--discipline)"><h3>デイリー試練</h3><span class="hint">毎日リセットされる</span></div>
       <div class="card">${QUESTS.map(questRowHtml).join('')}</div>
 
-      <div class="cols-2" style="margin-top:18px">
-        <div>
-          <div class="section-title" style="--accent:var(--motivation)"><h3>学習タスク</h3><span class="hint">片付けろ</span></div>
-          <div class="card">
-            <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-              <input class="intent-input" id="new-task-title" placeholder="例：英単語 100個暗記" style="flex:2;min-width:160px" />
-              <input class="intent-input" id="new-task-subject" placeholder="科目" style="flex:1;min-width:90px" />
-              <select class="intent-input" id="new-task-diff" style="flex:0 0 92px">
-                <option value="1">★ 易</option><option value="2" selected>★★ 中</option><option value="3">★★★ 難</option>
-              </select>
-              <button class="btn primary small" data-action="add-task">追加</button>
-            </div>
-            ${state.tasks.length ? state.tasks.map((task) => `
-              <div class="task-row ${task.done ? 'done' : ''}">
-                <button class="task-check" data-action="toggle-task" data-id="${task.id}">✓</button>
-                <div class="task-body">
-                  <div class="task-title">${esc(task.title)}</div>
-                  <div class="task-meta"><span>${esc(task.subject || '科目なし')}</span><span class="diff-${task.difficulty}">${'★'.repeat(task.difficulty)}</span><span>予想 ${task.estimate} 回</span></div>
-                </div>
-                <button class="icon-btn" data-action="delete-task" data-id="${task.id}">✕</button>
-              </div>`).join('') : '<div class="empty"><span class="emoji">📝</span><p>まだ課題がない。<br>まず、たった一つ書き出せ。</p></div>'}
-          </div>
+      <div class="section-title" style="--accent:var(--motivation)"><h3>自分のタスク</h3><span class="hint">${open.length} 件 未完了</span></div>
+      <div class="card">
+        <div class="task-add">
+          <input class="intent-input" id="new-task-title" placeholder="例：英単語 100個 暗記" />
+          <input class="intent-input" id="new-task-subject" placeholder="科目" />
+          <select class="intent-input" id="new-task-diff">
+            <option value="1">★ 易</option><option value="2" selected>★★ 中</option><option value="3">★★★ 難</option>
+          </select>
+          <button class="btn primary" data-action="add-task">＋ 追加</button>
         </div>
-        <div>
-          <div class="section-title" style="--accent:var(--obsession)"><h3>継続の記録</h3></div>
-          <div class="card">${heatmapHtml(15)}
-            <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted);line-height:1.7">
-              一日空けるごとに、四つの力は少しずつ衰える。<br>
-              シールドを持っていれば、その日は守られる。<br>
-              <span class="gold-text">今のシールド：${state.stats.shields} 枚</span>
-            </div>
-          </div>
+        ${state.tasks.length ? state.tasks.map((task) => taskRowHtml(task)).join('') : `<div class="empty"><span class="emoji">📝</span><p>まだタスクがない。<br>まず、たった一つ書き出せ。</p></div>`}
+      </div>
+
+      <div class="section-title" style="--accent:var(--obsession)"><h3>継続カレンダー</h3><span class="hint">直近15週間</span></div>
+      <div class="card">
+        ${heatmapHtml(15)}
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted);line-height:1.7">
+          一日空けるごとに、四つの力は少しずつ衰える。<br>
+          シールドを持っていれば、その日は守られる。 <span class="gold-text">今 ${state.stats.shields} 枚</span>
         </div>
       </div>
     `;
   }
-
   /* ---------- ライバル対決 ---------- */
   function fighterRow(label, avatar, name, minutes, max, color, isMe) {
     const pct = Math.min(100, (minutes / max) * 100);
@@ -829,6 +870,10 @@
           </div>
           <button class="btn primary" data-action="start-focus">▶ ${d.win ? '差を広げる' : '今すぐ追いかける'}</button>
         </div>
+        <div class="arena-lore">
+          <span class="tag">${esc(d.rival.style)}</span>
+          <span>${esc(d.rival.lore)}</span>
+        </div>
         <div class="taunt-box" style="margin-top:16px">
           <div class="who">👁 ${esc(d.rival.name)} の言葉</div>
           <p>${rivalTaunt(d.rival)}</p>
@@ -836,28 +881,22 @@
       </div>
 
       <div class="section-title" style="--accent:var(--obsession)"><h3>ライバルを選べ</h3><span class="hint">Lv.${li.level} ・ 解放 ${unlockedCount} / ${RIVALS.length}</span></div>
-      <div class="rival-grid">
+      <div class="rival-grid compact">
         ${RIVALS.map((r) => {
           const unlocked = isUnlocked(r);
           const selected = r.id === state.duel.selected;
           return `
-            <button class="rival-card ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}" style="--rival-c:${r.color}" data-action="select-rival" data-id="${r.id}">
-              <div class="rival-card-head">
-                <span class="rival-avatar">${r.avatar}</span>
-                <div style="flex:1;min-width:0">
-                  <div class="rival-name">${esc(r.name)} ${selected ? '<span class="tag">対決中</span>' : ''}</div>
-                  <div class="rival-title">${esc(r.title)}</div>
-                </div>
-                ${unlocked ? `<span class="rival-min">${rivalMinutes(r)}<small>分</small></span>` : '<span class="rival-min">🔒</span>'}
-              </div>
-              <div class="rival-quote">${esc(r.quote)}</div>
-              <div class="rival-style">${esc(r.style)}</div>
-              <div class="rival-lore">${esc(r.lore)}</div>
-              ${unlocked ? '' : `<div class="rival-lock">Lv.${r.unlock} で解放</div>`}
+            <button class="rival-card compact ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}" style="--rival-c:${r.color}" data-action="select-rival" data-id="${r.id}">
+              <span class="rival-avatar">${r.avatar}</span>
+              <span class="rival-info">
+                <strong>${esc(r.name)}</strong>
+                <small>${esc(r.title)}</small>
+              </span>
+              <span class="rival-min">${unlocked ? `${rivalMinutes(r)}<small>分</small>` : '🔒'}</span>
+              ${selected ? '<span class="tag">対決中</span>' : unlocked ? '<span class="rival-select-hint">選ぶ</span>' : `<span class="rival-lock">Lv.${r.unlock}</span>`}
             </button>`;
         }).join('')}
       </div>
-
       <div class="cols-2" style="margin-top:18px">
         <div>
           <div class="section-title" style="--accent:var(--ego)"><h3>対決の記録</h3><span class="hint">毎日の勝敗</span></div>
@@ -874,14 +913,24 @@
           </div>
         </div>
         <div>
-          <div class="section-title" style="--accent:var(--ego)"><h3>称号の階段</h3><span class="hint">ライバル解放にも影響</span></div>
+          <div class="section-title" style="--accent:var(--ego)"><h3>称号と名刺</h3><span class="hint">ライバル解放にも影響</span></div>
           <div class="card">
-            ${TITLES.map((t) => `
-              <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);${li.level >= t.lv ? '' : 'opacity:.4'}">
-                <span style="font-size:16px">${li.level >= t.lv ? '👑' : '🔒'}</span>
-                <div style="flex:1"><strong style="font-size:12px">${t.name}</strong><div class="dim" style="font-size:9px">${t.en}</div></div>
-                <span class="tag">Lv.${t.lv}+</span>
-              </div>`).join('')}
+            <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:rgba(255,201,74,.08);border:1px solid rgba(255,201,74,.25);margin-bottom:14px">
+              <span style="font-size:22px">👑</span>
+              <div style="flex:1"><strong style="font-size:13px">${li.title.name}</strong><div class="dim" style="font-size:10px">${li.title.en} ・ Lv.${li.level}</div></div>
+              <span class="tag">現在</span>
+            </div>
+            <details class="ladder">
+              <summary>称号の階段を見る</summary>
+              <div style="margin-top:12px">
+                ${TITLES.map((t) => `
+                  <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);${li.level >= t.lv ? '' : 'opacity:.4'}">
+                    <span style="font-size:16px">${li.level >= t.lv ? '👑' : '🔒'}</span>
+                    <div style="flex:1"><strong style="font-size:12px">${t.name}</strong><div class="dim" style="font-size:9px">${t.en}</div></div>
+                    <span class="tag">Lv.${t.lv}+</span>
+                  </div>`).join('')}
+              </div>
+            </details>
             <button class="btn primary block" style="margin-top:16px" data-action="ego-card">👑 自我的名刺を発行する</button>
           </div>
         </div>
@@ -891,38 +940,61 @@
 
   /* ---------- SHOP ---------- */
   function viewShop() {
+    const groups = [
+      { title: '集中を守る・加速する', hint: '続けるための装備', ids: ['shield', 'boost', 'incense', 'tome'] },
+      { title: 'ご褒美', hint: '頑張った自分に', ids: ['ticket', 'crown'] },
+    ];
+    const owned = (id) => ({
+      shield: state.stats.shields,
+      boost: state.stats.boost ? 1 : 0,
+      ticket: state.stats.tickets,
+      tome: state.stats.tomes,
+      crown: 0,
+      incense: 0,
+    }[id] || 0);
+
     return `
-      <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:linear-gradient(135deg,rgba(255,201,74,.1),var(--panel))">
-        <div><div style="font-size:11px;color:var(--muted)">所持金貨</div><div style="font-size:30px;font-weight:800;color:var(--ego)" class="mono">◈ ${state.stats.gold}</div></div>
-        <div style="font-size:11px;color:var(--muted);max-width:360px;line-height:1.7">集中して稼ぎ、自分を甘やかせ。報酬があるから、続く。<br>甘やかしも、設計のうち。</div>
+      <div class="page-head">
+        <div><h1>ショップ</h1><p class="muted">集中して貯めた金貨で、続けるための装備を買う。</p></div>
+        <div class="gold-big">◈ ${state.stats.gold}</div>
       </div>
-      <div class="section-title" style="--accent:var(--ego)"><h3>道場の棚</h3><span class="hint">金貨で心の装備を買う</span></div>
-      <div class="shop-grid">
-        ${SHOP.map((item) => {
-          const owned = item.id === 'tome' && state.stats.tomes > 0;
-          return `<button class="shop-item" data-action="buy" data-id="${item.id}" ${owned ? 'disabled' : ''}>
-            <div class="shop-icon">${item.icon}</div>
-            <div class="shop-name">${item.name}</div>
-            <div class="shop-desc">${item.desc}</div>
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <span class="shop-price">◈ ${item.price}</span>
-              <span class="tag">${owned ? '購入済み' : state.stats.gold >= item.price ? '購入する →' : '金貨不足'}</span>
-            </div>
-          </button>`;
-        }).join('')}
-      </div>
-      <div class="section-title" style="--accent:var(--discipline)"><h3>現在の装備</h3></div>
+
+      ${groups.map((g) => `
+        <div class="section-title" style="--accent:var(--ego)"><h3>${g.title}</h3><span class="hint">${g.hint}</span></div>
+        <div class="shop-grid">
+          ${g.ids.map((id) => {
+            const item = SHOP.find((x) => x.id === id);
+            const count = owned(id);
+            const soldOut = id === 'tome' && state.stats.tomes > 0;
+            const afford = state.stats.gold >= item.price;
+            return `
+              <div class="shop-item ${soldOut ? 'soldout' : ''}">
+                <div class="shop-item-top">
+                  <span class="shop-icon">${item.icon}</span>
+                  ${count > 0 ? `<span class="tag">所持 ${count}</span>` : ''}
+                  ${soldOut ? '<span class="tag">購入済み</span>' : ''}
+                </div>
+                <div class="shop-name">${item.name}</div>
+                <div class="shop-desc">${item.desc}</div>
+                <div class="shop-buy">
+                  <span class="shop-price">◈ ${item.price}</span>
+                  <button class="btn small ${afford && !soldOut ? 'primary' : ''}" data-action="buy" data-id="${item.id}" ${soldOut ? 'disabled' : ''}>${soldOut ? '購入済み' : afford ? '購入する' : '金貨不足'}</button>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>`).join('')}
+
+      <div class="section-title" style="--accent:var(--discipline)"><h3>持ち物</h3></div>
       <div class="card">
-        <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
-          <div class="stat-box"><div class="label">シールド</div><div class="value">${state.stats.shields}</div><div class="sub">連続を守る</div></div>
-          <div class="stat-box"><div class="label">ブースト</div><div class="value" style="color:var(--obsession)">${state.stats.boost ? 'ON' : 'OFF'}</div><div class="sub">次回XP2倍</div></div>
-          <div class="stat-box"><div class="label">ご褒美券</div><div class="value">${state.stats.tickets}</div><div class="sub">罪悪感なし</div></div>
-          <div class="stat-box"><div class="label">啓発の書</div><div class="value">${state.stats.tomes}</div><div class="sub">規律 +3</div></div>
+        <div class="summary-chips">
+          <span class="chip">🛡️ シールド ${state.stats.shields}</span>
+          <span class="chip">⚡ ブースト ${state.stats.boost ? 'ON' : 'OFF'}</span>
+          <span class="chip">🎟️ チケット ${state.stats.tickets}</span>
+          <span class="chip">📜 啓発の書 ${state.stats.tomes}</span>
         </div>
       </div>
     `;
   }
-
   /* ============================================================
      MODALS
      ============================================================ */
@@ -1081,6 +1153,7 @@
       case 'confirm-give-up': closeModal(); giveUp(); renderAll(); break;
       case 'mode': setMode(el.dataset.mode); break;
       case 'continue-after-session': closeModal(); go('focus'); setMode('short'); startTimer(); break;
+      case 'continue-focus': closeModal(); go('focus'); setMode('focus'); startTimer(); break;
       case 'close-modal': closeModal(); break;
       case 'backdrop': if (e.target === el && modalOptions.closable) closeModal(); break;
       case 'profile': profileModal(); break;

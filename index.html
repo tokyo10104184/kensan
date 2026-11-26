@@ -21,19 +21,19 @@
 
       <nav class="side-nav" id="side-nav">
         <button class="nav-item active" data-view="home" data-action="nav">
-          <span class="nav-icon">⌂</span><span>ホーム</span>
+          <span class="nav-icon">⌂</span><span>今日</span>
         </button>
         <button class="nav-item" data-view="focus" data-action="nav">
           <span class="nav-icon">◉</span><span>集中</span>
         </button>
         <button class="nav-item" data-view="quests" data-action="nav">
-          <span class="nav-icon">✦</span><span>課題</span>
+          <span class="nav-icon">✓</span><span>タスク</span>
         </button>
         <button class="nav-item" data-view="rivals" data-action="nav">
-          <span class="nav-icon">⚔</span><span>対決</span>
+          <span class="nav-icon">⚔</span><span>ライバル</span>
         </button>
         <button class="nav-item" data-view="shop" data-action="nav">
-          <span class="nav-icon">◇</span><span>道場</span>
+          <span class="nav-icon">◈</span><span>ショップ</span>
         </button>
       </nav>
 
@@ -55,6 +55,7 @@
       <header class="topbar">
         <div class="topbar-left">
           <div class="mobile-brand"><span class="brand-mark small">研</span><strong>研鑽</strong></div>
+          <span class="mobile-level" id="mobile-level">Lv.1</span>
           <div class="level-block">
             <div class="level-row">
               <span class="level-badge" id="level-badge">Lv.1</span>
@@ -74,6 +75,7 @@
           <div class="stat-pill gold" title="金貨">
             <span class="pill-icon">◈</span><strong id="gold-val">0</strong>
           </div>
+          <button class="btn primary topbar-cta" data-action="start-focus">▶ 集中する</button>
         </div>
       </header>
 
@@ -82,12 +84,13 @@
 
     <!-- ============ MOBILE NAV ============ -->
     <nav class="mobile-nav" id="mobile-nav">
-      <button class="nav-item active" data-view="home" data-action="nav"><span class="nav-icon">⌂</span><span>ホーム</span></button>
+      <button class="nav-item active" data-view="home" data-action="nav"><span class="nav-icon">⌂</span><span>今日</span></button>
       <button class="nav-item" data-view="focus" data-action="nav"><span class="nav-icon">◉</span><span>集中</span></button>
-      <button class="nav-item nav-main" data-view="focus" data-action="quick-start"><span class="nav-icon">▶</span></button>
-      <button class="nav-item" data-view="quests" data-action="nav"><span class="nav-icon">✦</span><span>課題</span></button>
-      <button class="nav-item" data-view="rivals" data-action="nav"><span class="nav-icon">⚔</span><span>対決</span></button>
+      <button class="nav-item" data-view="quests" data-action="nav"><span class="nav-icon">✓</span><span>タスク</span></button>
+      <button class="nav-item" data-view="rivals" data-action="nav"><span class="nav-icon">⚔</span><span>ライバル</span></button>
+      <button class="nav-item" data-view="shop" data-action="nav"><span class="nav-icon">◈</span><span>ショップ</span></button>
     </nav>
+    <button class="fab" data-action="quick-start" aria-label="集中を開始">▶</button>
   </div>
 
   <div id="modal-root"></div>
