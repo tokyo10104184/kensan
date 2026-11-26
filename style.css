@@ -381,23 +381,66 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .session-stat span { color: var(--muted); }
 .session-stat strong { font-variant-numeric: tabular-nums; }
 
-/* rank */
-.rank-row {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px 16px; border-radius: 13px; border: 1px solid var(--border);
-  background: var(--panel); margin-bottom: 8px;
+/* duel arena */
+.duel-arena {
+  padding: 26px; border-radius: 22px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-color: color-mix(in srgb, var(--rival-c) 35%, transparent);
+  background:
+    radial-gradient(600px 300px at 100% 0%, color-mix(in srgb, var(--rival-c) 16%, transparent), transparent 70%),
+    var(--panel);
+  box-shadow: var(--shadow);
 }
-.rank-row.me { border-color: rgba(255,201,74,.4); background: linear-gradient(90deg, rgba(255,201,74,.1), var(--panel)); }
-.rank-pos { width: 28px; font-size: 16px; font-weight: 800; color: var(--dim); text-align: center; }
-.rank-row:nth-child(1) .rank-pos { color: var(--ego); }
-.rank-row:nth-child(2) .rank-pos { color: #cfd4e0; }
-.rank-row:nth-child(3) .rank-pos { color: #cd8b5a; }
-.rank-avatar { font-size: 22px; }
-.rank-body { flex: 1; min-width: 0; }
-.rank-name { font-size: 13px; font-weight: 700; }
-.rank-sub { font-size: 10px; color: var(--dim); }
-.rank-score { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.rank-score small { font-size: 9px; color: var(--dim); font-weight: 400; }
+.arena-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 24px; }
+.arena-eyebrow { font-size: 9.5px; letter-spacing: .2em; font-weight: 800; color: var(--rival-c); margin-bottom: 6px; }
+.arena-head h2 { margin: 0; font-size: clamp(17px, 2.2vw, 24px); line-height: 1.4; }
+.arena-badge { flex: 0 0 auto; padding: 5px 11px; border-radius: 9px; font-size: 10px; font-weight: 800; color: #101018; background: var(--rival-c); }
+.arena-body { display: grid; grid-template-columns: 1fr 52px 1fr; gap: 12px; align-items: center; }
+.versus { text-align: center; font-size: 13px; font-weight: 900; color: var(--dim); letter-spacing: .05em; }
+.fighter { padding: 15px; border-radius: 14px; border: 1px solid var(--border); background: rgba(0,0,0,.22); }
+.fighter.me { border-color: rgba(70,201,255,.35); background: rgba(70,201,255,.05); }
+.fighter-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.fighter-avatar { font-size: 26px; }
+.fighter-name { flex: 1; min-width: 0; }
+.fighter-name strong { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fighter-name small { font-size: 9.5px; color: var(--dim); }
+.fighter-minutes { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+.fighter-minutes small { font-size: 10px; color: var(--muted); margin-left: 2px; font-weight: 400; }
+.duel-bar { height: 8px; border-radius: 8px; background: rgba(255,255,255,.07); overflow: hidden; }
+.duel-bar i { display: block; height: 100%; border-radius: 8px; transition: width .6s cubic-bezier(.22,1,.36,1); }
+.arena-footer { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.arena-message { flex: 1; min-width: 220px; }
+.arena-message p { margin: 0; font-size: 13px; font-weight: 700; }
+
+/* rival roster */
+.rival-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+.rival-card {
+  text-align: left; padding: 16px; border-radius: 15px;
+  border: 1px solid var(--border); background: var(--panel);
+  transition: .2s; position: relative; overflow: hidden;
+}
+.rival-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--rival-c); opacity: .7; }
+.rival-card:hover { border-color: color-mix(in srgb, var(--rival-c) 55%, transparent); transform: translateY(-2px); }
+.rival-card.selected { border-color: var(--rival-c); background: color-mix(in srgb, var(--rival-c) 10%, var(--panel)); box-shadow: 0 0 24px color-mix(in srgb, var(--rival-c) 18%, transparent); }
+.rival-card.locked { opacity: .55; }
+.rival-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.rival-avatar { font-size: 26px; }
+.rival-name { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.rival-title { font-size: 9.5px; color: var(--rival-c); }
+.rival-min { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--rival-c); }
+.rival-min small { font-size: 9px; color: var(--muted); font-weight: 400; }
+.rival-quote { font-size: 11.5px; line-height: 1.5; margin-bottom: 10px; }
+.rival-style { display: inline-block; font-size: 9.5px; padding: 3px 7px; border-radius: 6px; background: rgba(255,255,255,.06); color: var(--muted); margin-bottom: 10px; }
+.rival-lore { font-size: 10px; color: var(--dim); line-height: 1.6; }
+.rival-lock { margin-top: 10px; font-size: 10px; font-weight: 800; color: var(--ego); }
+
+.record-strip { display: flex; gap: 8px; flex-wrap: wrap; }
+.record-day { width: 42px; text-align: center; padding: 7px 0; border-radius: 9px; border: 1px solid var(--border); background: var(--panel); }
+.record-day.win { border-color: rgba(255,201,74,.4); background: rgba(255,201,74,.08); }
+.record-day.lose { opacity: .5; }
+.record-day span { display: block; font-size: 15px; }
+.record-day small { font-size: 8.5px; color: var(--dim); }
 
 .taunt-box {
   padding: 16px; border-radius: 14px; border: 1px solid rgba(255,106,77,.25);
@@ -485,6 +528,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   .focus-layout { grid-template-columns: 1fr; }
   .focus-side { display: grid; grid-template-columns: 1fr 1fr; }
   .shop-grid { grid-template-columns: repeat(2, 1fr); }
+  .rival-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 820px) {
@@ -518,6 +562,10 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 
 @media (max-width: 520px) {
   .drivers-grid, .shop-grid, .focus-side, .stat-grid { grid-template-columns: 1fr 1fr; }
+  .rival-grid { grid-template-columns: 1fr; }
+  .arena-body { grid-template-columns: 1fr; }
+  .versus { padding: 2px 0; }
+  .duel-arena { padding: 18px; }
   .timer-ring { width: 230px; height: 230px; }
   .timer-time { font-size: 52px; }
   .hero-actions .btn { flex: 1; }

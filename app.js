@@ -22,25 +22,52 @@
     { key: 'motivation', name: '意欲',   en: 'MOTIVATION', icon: '🔥', color: 'var(--motivation)', desc: '「なぜ」を思い出すほど、動き出す力が強まる。' },
     { key: 'discipline', name: '規律',   en: 'DISCIPLINE', icon: '🧊', color: 'var(--discipline)', desc: '途切れさせない仕組み。習慣が意志を代行する。' },
     { key: 'obsession',  name: '執着',   en: 'OBSESSION',  icon: '🌀', color: 'var(--obsession)',  desc: '連続・コンボ・記録。やめられなくなるループ。' },
-    { key: 'ego',        name: '自我',   en: 'EGO',        icon: '👑', color: 'var(--ego)',       desc: '称号と順位。自分の名を高めたい欲を燃料に。' },
+    { key: 'ego',        name: '自我',   en: 'EGO',        icon: '👑', color: 'var(--ego)',       desc: '称号と勝敗。自分の名を高めたい欲を燃料に。' },
   ];
-  const TAUNTS = [
-    '「その程度で満足してるの？ 私はまだ終わっていない。」',
-    '「今日の私を超えられないなら、明日も超えられないぞ。」',
-    '「休憩は私が取る。お前は今、盤面に立っている。」',
-    '「記録は裏切らない。お前の意志は裏切るだろう。」',
-    '「隣の席の空白が、お前の分の成果を待っている。」',
-    '「才能じゃない。回数だ。今の差は、そのまま積み上がる。」',
-    '「名前を出すのが怖いなら、出るほど勉強しろ。」',
-    '「今ここで止めれば、この選択は明日も続く。」',
-  ];
+  // 架空の修行者たち。一人ひとりに信念・学習スタイル・挑発文を持たせる。
   const RIVALS = [
-    { name: '影山 蓮', avatar: '🥷', title: '修羅', base: 138 },
-    { name: '北斗',   avatar: '🐺', title: '鬼',   base: 116 },
-    { name: '千夜',   avatar: '🦉', title: '夜型', base: 94 },
-    { name: 'Mika',   avatar: '🦊', title: '才女', base: 78 },
-    { name: 'SORA',   avatar: '🦅', title: '野心家', base: 61 },
-    { name: '無名',   avatar: '🌑', title: '?',    base: 40 },
+    {
+      id: 'kageyama', name: '影山 蓮', avatar: '🥷', title: '修羅', color: '#ff6a4d',
+      quote: '「限界は、自分で決めた線のことだ。」', style: '深夜の鬼集中・難問を潰す型',
+      lore: '元・東大落ち。あの日から毎日14時間、机に向かい続けている。',
+      base: 138, growth: 0.08, unlock: 1,
+      taunts: ['「その程度で満足してるの？ 私はまだ終わっていない。」', '「お前が寝ている間に、私は三章終わらせた。」', '「痛いほど集中しろ。それが唯一の近道だ。」'],
+    },
+    {
+      id: 'hokuto', name: '北斗', avatar: '🐺', title: '孤高の狼', color: '#46c9ff',
+      quote: '「誰にも追わせない。それが私の流儀。」', style: '朝5時起き・ルーチン完全遵守型',
+      lore: '誰とも群さない。だが、その孤独な朝の時間が彼を最強にしている。',
+      base: 116, growth: 0.08, unlock: 1,
+      taunts: ['「ルーチンを崩した瞬間、お前は負けてる。」', '「根性じゃない。毎朝同じ時間に席に着くだけだ。」', '「今日の私を超えられないなら、明日も超えられないぞ。」'],
+    },
+    {
+      id: 'chiya', name: '千夜', avatar: '🦉', title: '夜の読書鬼', color: '#b56bff',
+      quote: '「静かな夜が、いちばん正直だ。」', style: '夜型・インプット量で押し切る型',
+      lore: '図書館の閉館ギリギリまで居座る。ノートはいつもびっしりだ。',
+      base: 94, growth: 0.05, unlock: 2,
+      taunts: ['「記録は裏切らない。お前の意志は裏切るだろう。」', '「私のノートの厚さと、お前のを比べてみろ。」', '「今ここで止めれば、この選択は明日も続く。」'],
+    },
+    {
+      id: 'mika', name: 'Mika', avatar: '🦊', title: '才女', color: '#ffc94a',
+      quote: '「効率が悪い努力は、ただの自己満足。」', style: '短時間集中・メリハリ型',
+      lore: '短い集中を積み重ねて、他人の倍の成果を出す。遊ぶ時は心から遊ぶ。',
+      base: 78, growth: 0.04, unlock: 3,
+      taunts: ['「休憩は私が取る。お前は今、盤面に立っている。」', '「ダラダラ長くやるより、短く斬って寝ろ。」', '「私の集中は、途切れない。途切れるのはお前だ。」'],
+    },
+    {
+      id: 'sora', name: 'SORA', avatar: '🦅', title: '野心家', color: '#7dffb0',
+      quote: '「トップになるために、今日も一歩。」', style: '目標逆算・スピード重視型',
+      lore: '年齢は若い。だが、目的地だけは誰よりはっきり見ている。',
+      base: 61, growth: 0.12, unlock: 4,
+      taunts: ['「才能じゃない。回数だ。今の差は、そのまま積み上がる。」', '「我先に、だ。置いていくぞ。」', '「その溜め息、次のセッションに変えてこい。」'],
+    },
+    {
+      id: 'mumei', name: '無名', avatar: '🌑', title: '???', color: '#9a9aae',
+      quote: '「……」', style: '正体不明・ひたすら静かに積み上げる型',
+      lore: '誰も顔を見たことがない。ただ、記録だけが毎日更新されていく。',
+      base: 40, growth: 0.18, unlock: 6,
+      taunts: ['「……（何も言わない。ただ記録が差を語る。）」', '「…………」', '「……お前を、追い抜く。」'],
+    },
   ];
   const SHOP = [
     { id: 'shield', icon: '🛡️', name: '連続シールド', price: 120, desc: '明日学習できなくても、連続日数を1回だけ守る。' },
@@ -71,6 +98,7 @@
       questsClaimed: {},
       focus: { mode: 'focus', minutes: 25, remaining: 25 * 60, running: false, endAt: null, intent: '' },
       settings: { sound: true, notify: false, focusMin: 25, breakMin: 5, longBreakMin: 15 },
+      duel: { selected: 'kageyama', results: {}, lastChecked: null },
       view: 'home',
     };
   }
@@ -92,6 +120,7 @@
         drivers: { ...base.drivers, ...(parsed.drivers || {}) },
         focus: { ...base.focus, ...(parsed.focus || {}) },
         settings: { ...base.settings, ...(parsed.settings || {}) },
+        duel: { ...base.duel, ...(parsed.duel || {}) },
         history: parsed.history || {},
         tasks: parsed.tasks || [],
         questsClaimed: parsed.questsClaimed || {},
@@ -196,6 +225,7 @@
     }
     state.stats.lastActiveDate = todayKey();
     if (state.stats.comboDate && state.stats.comboDate !== todayKey()) state.stats.combo = 0;
+    resolveDuelDay();
   }
 
   /* ---------------- timer ---------------- */
@@ -274,6 +304,7 @@
     t.minutes += minutes;
     t.xp += xpGain;
     if (new Date().getHours() < 12) t.morning += 1;
+    checkDuelWin();
 
     // streak
     const today = todayKey();
@@ -354,21 +385,92 @@
     renderAll();
   }
 
-  /* ---------------- rival board ---------------- */
-  function leaderboard() {
-    const t = todayStats();
-    const n = dayNum(todayKey());
-    const rivals = RIVALS.map((r, i) => ({
-      ...r, minutes: Math.max(15, r.base + ((n * 7 + i * 13) % 41) - 20), me: false,
-    }));
-    const list = [{ name: state.profile.name, avatar: state.profile.avatar, title: levelInfo().title.name, minutes: t.minutes, me: true }, ...rivals];
-    list.sort((a, b) => b.minutes - a.minutes);
-    return list;
+  /* ---------------- 架空の修行者との対決 ---------------- */
+  const EPOCH = dayNum('2026-01-01');
+
+  function currentRival() {
+    return RIVALS.find((r) => r.id === state.duel.selected) || RIVALS[0];
   }
-  function taunt() {
-    const rank = leaderboard().findIndex((x) => x.me) + 1;
-    const idx = (dayNum(todayKey()) + rank * 3) % TAUNTS.length;
-    return TAUNTS[idx];
+  function isUnlocked(rival) {
+    return levelInfo().level >= rival.unlock;
+  }
+  function keyFromDay(n) {
+    const d = new Date(n * 86400000);
+    return todayKey(new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  }
+  // 日付から決まる架空の人物の「その日の集中時間」。日が経つほど少しずつ強くなる。
+  function rivalMinutes(rival, key = todayKey()) {
+    const n = dayNum(key);
+    const i = RIVALS.indexOf(rival);
+    const noise = ((n * 7 + i * 13) % 41) - 20;
+    const growth = Math.min(60, Math.max(0, n - EPOCH) * (rival.growth || 0));
+    return Math.max(10, Math.round(rival.base + growth + noise));
+  }
+  function duelStatus() {
+    const rival = currentRival();
+    const me = todayStats().minutes;
+    const rivalMin = rivalMinutes(rival);
+    return {
+      rival, me, rivalMin,
+      diff: me - rivalMin,
+      win: me > rivalMin,
+      close: Math.abs(me - rivalMin) <= 15,
+      gap: Math.max(0, rivalMin - me),
+    };
+  }
+  function rivalTaunt(rival = currentRival()) {
+    const idx = (dayNum(todayKey()) + RIVALS.indexOf(rival) * 3) % rival.taunts.length;
+    return rival.taunts[idx];
+  }
+  function duelRecord() {
+    const results = Object.values(state.duel.results || {});
+    return {
+      wins: results.filter((r) => r === 'win').length,
+      losses: results.filter((r) => r === 'lose').length,
+      results: state.duel.results || {},
+    };
+  }
+  // 日付が変わったら、前日以前の未判定日を「負け」として締める。
+  function resolveDuelDay() {
+    const today = todayKey();
+    const last = state.duel.lastChecked;
+    if (last && last !== today) {
+      let n = dayNum(last);
+      const end = dayNum(today);
+      while (n < end) {
+        const k = keyFromDay(n);
+        if (!state.duel.results[k]) state.duel.results[k] = 'lose';
+        n += 1;
+      }
+    }
+    state.duel.lastChecked = today;
+  }
+  // 今日の集中時間がライバルを抜いた瞬間に、一日一度だけ勝利報酬を出す。
+  function checkDuelWin() {
+    const day = todayKey();
+    if ((state.duel.results || {})[day] === 'win') return;
+    const s = duelStatus();
+    if (s.me > s.rivalMin) {
+      state.duel.results[day] = 'win';
+      state.stats.xp += 100;
+      state.stats.gold += 80;
+      boostDriver('ego', 4);
+      boostDriver('obsession', 3);
+      particles('👑', 12);
+      chime();
+      toast(`👑 ${s.rival.name}を抜いた！ +100 XP / +80 金貨`);
+    }
+  }
+  function selectRival(id) {
+    const rival = RIVALS.find((r) => r.id === id);
+    if (!rival) return;
+    if (!isUnlocked(rival)) {
+      toast(`🔒 Lv.${rival.unlock} で解放される`);
+      return;
+    }
+    state.duel.selected = id;
+    save(); renderAll();
+    toast(`${rival.name} をライバルに定めた。今日の集中時間で勝負だ。`);
   }
 
   /* ============================================================
@@ -408,7 +510,7 @@
     renderDriverMini();
     renderNav();
     const view = $('#view');
-    const renders = { home: viewHome, focus: viewFocus, quests: viewQuests, rank: viewRank, shop: viewShop };
+    const renders = { home: viewHome, focus: viewFocus, quests: viewQuests, rivals: viewRivals, shop: viewShop };
     view.innerHTML = `<div class="view">${(renders[state.view] || viewHome)()}</div>`;
     if (state.view === 'focus') updateTimerDom();
   }
@@ -424,7 +526,7 @@
     const t = todayStats();
     const target = 4;
     const pct = Math.min(100, (t.sessions / target) * 100);
-    const rank = leaderboard().findIndex((x) => x.me) + 1;
+    const duel = duelStatus();
     const openTasks = state.tasks.filter((x) => !x.done).slice(0, 3);
 
     const questRows = QUESTS.slice(0, 3).map((q) => questRowHtml(q)).join('');
@@ -459,11 +561,18 @@
           </div>
           <div class="card" style="background:linear-gradient(135deg,rgba(70,201,255,.08),rgba(0,0,0,.2))">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-              <span style="font-size:11px;color:var(--muted)">ライバルとの差</span>
-              <span class="tag">現在 <b style="color:var(--ego)">${rank}位</b></span>
+              <span style="font-size:11px;color:var(--muted)">今日のライバル</span>
+              <span class="tag">${duel.win ? '👑 勝ち' : duel.close ? '⚔ 接戦' : '🔥 追いかける'}</span>
             </div>
-            <p style="margin:0;font-size:12px;line-height:1.6">${taunt()}</p>
-            <button class="btn small ghost" style="margin-top:12px" data-action="nav" data-view="rank">順位表を見る →</button>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:26px">${duel.rival.avatar}</span>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:800">${esc(duel.rival.name)} <span style="font-size:10px;color:var(--muted)">${esc(duel.rival.title)}</span></div>
+                <div class="muted" style="font-size:10px">今日 ${duel.rivalMin} 分 ・ あなた ${duel.me} 分</div>
+              </div>
+            </div>
+            <p style="margin:0;font-size:12px;line-height:1.6">${rivalTaunt(duel.rival)}</p>
+            <button class="btn small ghost" style="margin-top:12px" data-action="nav" data-view="rivals">${duel.win ? '勝敗を見る' : `あと${duel.gap}分で逆転 →`}</button>
           </div>
         </div>
       </div>
@@ -669,33 +778,103 @@
     `;
   }
 
-  /* ---------- RANK ---------- */
-  function viewRank() {
-    const li = levelInfo();
-    const board = leaderboard();
-    const myRank = board.findIndex((x) => x.me) + 1;
+  /* ---------- ライバル対決 ---------- */
+  function fighterRow(label, avatar, name, minutes, max, color, isMe) {
+    const pct = Math.min(100, (minutes / max) * 100);
     return `
-      <div class="cols-2">
+      <div class="fighter ${isMe ? 'me' : ''}">
+        <div class="fighter-top">
+          <span class="fighter-avatar">${avatar}</span>
+          <div class="fighter-name"><strong>${esc(name)}</strong><small>${esc(label)}</small></div>
+          <div class="fighter-minutes">${minutes}<small>分</small></div>
+        </div>
+        <div class="duel-bar"><i style="width:${pct}%;background:${color};box-shadow:0 0 14px ${color}"></i></div>
+      </div>`;
+  }
+
+  function viewRivals() {
+    const li = levelInfo();
+    const d = duelStatus();
+    const rec = duelRecord();
+    const max = Math.max(30, d.me, d.rivalMin) * 1.12;
+    const needed = Math.max(0, d.rivalMin - d.me + 1);
+    const sessionsNeeded = Math.ceil(needed / state.settings.focusMin);
+    const statusText = d.win ? '👑 あなたがリードしている。この差を守れ。'
+      : d.close ? '⚔ 接戦だ。あと一歩で逆転できる。'
+      : `🔥 ${d.gap} 分 遅れている。まだ追いつける。`;
+    const statusColor = d.win ? 'var(--ego)' : d.close ? 'var(--obsession)' : 'var(--motivation)';
+    const recent = Object.entries(rec.results).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 7);
+    const unlockedCount = RIVALS.filter(isUnlocked).length;
+
+    return `
+      <div class="duel-arena" style="--rival-c:${d.rival.color}">
+        <div class="arena-head">
+          <div>
+            <div class="arena-eyebrow">TODAY'S DUEL — ${d.rival.title}</div>
+            <h2>今日の集中時間で、${esc(d.rival.name)} を抜け。</h2>
+          </div>
+          <span class="arena-badge">${d.win ? '勝利確定' : d.close ? '接戦' : '挑戦中'}</span>
+        </div>
+        <div class="arena-body">
+          ${fighterRow(`${li.title.name} / Lv.${li.level}`, state.profile.avatar, state.profile.name, d.me, max, 'var(--discipline)', true)}
+          <div class="versus">VS</div>
+          ${fighterRow(d.rival.title, d.rival.avatar, d.rival.name, d.rivalMin, max, d.rival.color, false)}
+        </div>
+        <div class="arena-footer">
+          <div class="arena-message">
+            <p style="color:${statusColor}">${statusText}</p>
+            <p class="muted" style="font-size:11.5px;margin-top:4px">${d.win
+              ? 'ライバルは黙っていない。記録は明日も更新される。'
+              : `あと ${needed} 分（約 ${sessionsNeeded} セッション）で逆転。逆転報酬は +100 XP / +80 金貨（1日1回）。`}</p>
+          </div>
+          <button class="btn primary" data-action="start-focus">▶ ${d.win ? '差を広げる' : '今すぐ追いかける'}</button>
+        </div>
+        <div class="taunt-box" style="margin-top:16px">
+          <div class="who">👁 ${esc(d.rival.name)} の言葉</div>
+          <p>${rivalTaunt(d.rival)}</p>
+        </div>
+      </div>
+
+      <div class="section-title" style="--accent:var(--obsession)"><h3>ライバルを選べ</h3><span class="hint">Lv.${li.level} ・ 解放 ${unlockedCount} / ${RIVALS.length}</span></div>
+      <div class="rival-grid">
+        ${RIVALS.map((r) => {
+          const unlocked = isUnlocked(r);
+          const selected = r.id === state.duel.selected;
+          return `
+            <button class="rival-card ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}" style="--rival-c:${r.color}" data-action="select-rival" data-id="${r.id}">
+              <div class="rival-card-head">
+                <span class="rival-avatar">${r.avatar}</span>
+                <div style="flex:1;min-width:0">
+                  <div class="rival-name">${esc(r.name)} ${selected ? '<span class="tag">対決中</span>' : ''}</div>
+                  <div class="rival-title">${esc(r.title)}</div>
+                </div>
+                ${unlocked ? `<span class="rival-min">${rivalMinutes(r)}<small>分</small></span>` : '<span class="rival-min">🔒</span>'}
+              </div>
+              <div class="rival-quote">${esc(r.quote)}</div>
+              <div class="rival-style">${esc(r.style)}</div>
+              <div class="rival-lore">${esc(r.lore)}</div>
+              ${unlocked ? '' : `<div class="rival-lock">Lv.${r.unlock} で解放</div>`}
+            </button>`;
+        }).join('')}
+      </div>
+
+      <div class="cols-2" style="margin-top:18px">
         <div>
-          <div class="section-title" style="--accent:var(--ego)"><h3>今日の ICC ランキング</h3><span class="hint">集中時間（分）で順位決定</span></div>
+          <div class="section-title" style="--accent:var(--ego)"><h3>対決の記録</h3><span class="hint">毎日の勝敗</span></div>
           <div class="card">
-            ${board.map((r, i) => `
-              <div class="rank-row ${r.me ? 'me' : ''}">
-                <div class="rank-pos">${i + 1}</div>
-                <div class="rank-avatar">${r.avatar}</div>
-                <div class="rank-body"><div class="rank-name">${esc(r.name)} ${r.me ? '<span class="tag" style="margin-left:4px">YOU</span>' : ''}</div><div class="rank-sub">${esc(r.title)}</div></div>
-                <div class="rank-score">${r.minutes}<small>分</small></div>
-              </div>`).join('')}
-            <div class="dim" style="font-size:10px;margin-top:14px;text-align:center">※ ライバルは毎日記録を更新する。追いつくのは、あなた次第。</div>
+            <div class="stat-grid" style="grid-template-columns:repeat(2,1fr)">
+              <div class="stat-box"><div class="label">WINS</div><div class="value" style="color:var(--ego)">${rec.wins}</div><div class="sub">勝利</div></div>
+              <div class="stat-box"><div class="label">LOSSES</div><div class="value" style="color:var(--dim)">${rec.losses}</div><div class="sub">敗北</div></div>
+            </div>
+            <div style="margin-top:18px;font-size:11px;color:var(--muted);margin-bottom:8px">最近の7日</div>
+            <div class="record-strip">
+              ${recent.length ? recent.map(([k, result]) => `<div class="record-day ${result === 'win' ? 'win' : 'lose'}" title="${k}"><span>${result === 'win' ? '👑' : '✕'}</span><small>${k.slice(5)}</small></div>`).join('') : '<div class="dim" style="font-size:11px">まだ記録がない。今日が初戦だ。</div>'}
+            </div>
+            <div class="dim" style="font-size:10px;margin-top:14px;line-height:1.7">※ ライバルは毎日少しずつ成長する。放置すると記録は静かに積み上がっていく。</div>
           </div>
         </div>
         <div>
-          <div class="taunt-box">
-            <div class="who">👁 ライバルからの挑発 — 現在 ${myRank} 位</div>
-            <p>${taunt()}</p>
-          </div>
-
-          <div class="section-title" style="--accent:var(--ego)"><h3>称号の階段</h3></div>
+          <div class="section-title" style="--accent:var(--ego)"><h3>称号の階段</h3><span class="hint">ライバル解放にも影響</span></div>
           <div class="card">
             ${TITLES.map((t) => `
               <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);${li.level >= t.lv ? '' : 'opacity:.4'}">
@@ -797,13 +976,14 @@
 
   function egoCardModal() {
     const li = levelInfo();
-    const board = leaderboard();
-    const rank = board.findIndex((x) => x.me) + 1;
+    const rec = duelRecord();
+    const rival = currentRival();
     const card = [
       `【 研鑽 KENSAN — 修行者カード 】`,
       `${state.profile.avatar} ${state.profile.name} / ${li.title.name} (Lv.${li.level})`,
       `意欲 ${Math.round(state.drivers.motivation)} | 規律 ${Math.round(state.drivers.discipline)} | 執着 ${Math.round(state.drivers.obsession)} | 自我 ${Math.round(state.drivers.ego)}`,
-      `連続 ${state.stats.streak}日 · 通算 ${state.stats.totalMinutes}分 · 今日 ${rank}位`,
+      `連続 ${state.stats.streak}日 · 通算 ${state.stats.totalMinutes}分 · 対決 ${rec.wins}勝${rec.losses}敗`,
+      `ライバル: ${rival.name}（${rival.title}）`,
       `「${state.profile.why}」`,
     ].join('\n');
     openModal(`
@@ -818,7 +998,8 @@
           </div>
           <div style="font-size:11px;color:var(--muted);line-height:1.8">
             連続 ${state.stats.streak}日 / 通算 ${state.stats.totalMinutes}分<br>
-            今日の順位 ${rank}位 / 最高コンボ ${state.stats.bestCombo}<br>
+            対決 ${rec.wins}勝${rec.losses}敗 / 最高コンボ ${state.stats.bestCombo}<br>
+            ライバル：${esc(rival.name)}（${esc(rival.title)}）<br>
             「${esc(state.profile.why)}」
           </div>
         </div>
@@ -944,6 +1125,7 @@
         save(); closeModal(); renderAll();
         toast('道場の門が開いた。まずは25分、斬れ。');
         break;
+      case 'select-rival': selectRival(el.dataset.id); break;
       case 'claim-quest': claimQuest(el.dataset.id); break;
       case 'add-task': addTask(); break;
       case 'toggle-task': toggleTask(el.dataset.id); break;
