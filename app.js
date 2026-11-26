@@ -571,7 +571,7 @@
     const view = $('#view');
     const renders = { home: viewHome, focus: viewFocus, quests: viewQuests, rivals: viewRivals, shop: viewShop };
     view.innerHTML = `<div class="view">${(renders[state.view] || viewHome)()}</div>`;
-    if (state.view === 'focus') updateTimerDom();
+    if ($('#timer-ring')) updateTimerDom();
   }
   function go(view) {
     state.view = view;
@@ -596,6 +596,14 @@
     const previewTasks = openTasks.slice(0, 2);
 
     return `
+      <section class="home-timer-hero" id="home-timer-hero">
+        <div class="focus-stage">${timerStageHtml()}</div>
+        <button class="scroll-hint" data-action="scroll-home" aria-label="下のホーム画面へスクロール">
+          <span>いつものホームは下へ</span><span class="scroll-arrow">▼</span>
+        </button>
+      </section>
+
+      <div id="home-classic">
       <div class="home-hero">
         <div class="home-hero-main">
           <div class="hero-eyebrow">${dateLabel} ・ ${li.title.en}</div>
@@ -681,6 +689,7 @@
         <button class="btn small ghost" data-action="ego-card">👑 自我的名刺を見る</button>
         <span class="dim" style="font-size:10px">🛡️ シールド ${state.stats.shields} 枚 ・ 🎟️ チケット ${state.stats.tickets} 枚</span>
       </div>
+      </div>
     `;
   }
 
@@ -763,17 +772,14 @@
   }
 
   /* ---------- FOCUS ---------- */
-  function viewFocus() {
+  // タイマー本体。ホームの全面ポモドーロと集中画面で共通して使う。
+  function timerStageHtml() {
     const f = state.focus;
-    const t = todayStats();
-    const duel = duelStatus();
     const modeName = f.mode === 'focus' ? '集中' : f.mode === 'short' ? '短い休憩' : '長い休憩';
     const color = f.mode === 'focus' ? 'var(--motivation)' : f.mode === 'short' ? 'var(--discipline)' : 'var(--obsession)';
     const rewardXp = Math.round(f.minutes * 2 * comboMult() * (state.stats.boost ? 2 : 1));
     const rewardGold = Math.round(f.minutes * 1.2 * comboMult());
     return `
-      <div class="focus-layout">
-        <div class="focus-stage">
           <div class="focus-step">
             <label for="intent-input">このセッションでやること</label>
             <input class="intent-input" id="intent-input" placeholder="例：英文法 第3章を1周する" value="${esc(f.intent)}" data-action="intent" />
@@ -802,7 +808,15 @@
           </div>
 
           ${state.profile.why ? `<div class="focus-why">「${esc(state.profile.why)}」</div>` : ''}
-        </div>
+    `;
+  }
+
+  function viewFocus() {
+    const t = todayStats();
+    const duel = duelStatus();
+    return `
+      <div class="focus-layout">
+        <div class="focus-stage">${timerStageHtml()}</div>
 
         <div class="focus-side">
           <div class="card">
@@ -1253,11 +1267,18 @@
     renderTourStep();
   }
 
+  function startFocusInHome(mode) {
+    if (state.view !== 'home') go('home');
+    if (mode && state.focus.mode !== mode) setMode(mode);
+    if (!state.focus.running) startTimer();
+    $('#home-timer-hero')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function finishTour(startFocus) {
     $('#tour-root').innerHTML = '';
     state.tourDone = true;
     save();
-    if (startFocus) { go('focus'); setMode('focus'); startTimer(); }
+    if (startFocus) startFocusInHome('focus');
     else toast('準備完了。いつでも「集中する」から始められます。');
   }
 
@@ -1415,8 +1436,9 @@
 
     switch (action) {
       case 'nav': go(el.dataset.view); break;
-      case 'quick-start': go('focus'); if (!state.focus.running) startTimer(); break;
-      case 'start-focus': go('focus'); if (!state.focus.running) startTimer(); break;
+      case 'quick-start': startFocusInHome(); break;
+      case 'start-focus': startFocusInHome(); break;
+      case 'scroll-home': $('#home-classic')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); break;
       case 'start-timer': startTimer(); break;
       case 'pause': pauseTimer(); break;
       case 'reset-timer': resetTimer(); renderAll(); toast('タイマーをリセットした'); break;
@@ -1426,8 +1448,8 @@
         break;
       case 'confirm-give-up': closeModal(); giveUp(); renderAll(); break;
       case 'mode': setMode(el.dataset.mode); break;
-      case 'continue-after-session': closeModal(); go('focus'); setMode('short'); startTimer(); break;
-      case 'continue-focus': closeModal(); go('focus'); setMode('focus'); startTimer(); break;
+      case 'continue-after-session': closeModal(); startFocusInHome('short'); break;
+      case 'continue-focus': closeModal(); startFocusInHome('focus'); break;
       case 'close-modal': closeModal(); break;
       case 'driver-help': driverHelpModal(el.dataset.key); break;
       case 'backdrop': if (e.target === el && modalOptions.closable) closeModal(); break;

@@ -528,6 +528,33 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .topbar-cta { margin-left: 4px; padding: 9px 16px; font-size: 12.5px; }
 .fab { display: none; }
 
+/* home: 1画面いっぱいのポモドーロ */
+.home-timer-hero {
+  min-height: calc(100vh - 166px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative; padding: 6px 0 52px; margin-bottom: 22px;
+}
+.home-timer-hero .focus-stage {
+  width: 100%; max-width: 760px; padding: 30px 28px 26px;
+  background: linear-gradient(160deg, rgba(255,106,77,.07), rgba(181,107,255,.05)), var(--panel);
+}
+.home-timer-hero .mode-tabs { margin-bottom: 22px; }
+.home-timer-hero .timer-ring { width: min(340px, 60vw, 38vh); height: min(340px, 60vw, 38vh); }
+.home-timer-hero .timer-time { font-size: clamp(50px, 8vh, 78px); }
+.home-timer-hero .timer-combo { margin-top: 12px; }
+.home-timer-hero .focus-reward-inline { margin-top: 14px; }
+.home-timer-hero .timer-controls { margin-top: 22px; }
+.home-timer-hero .focus-why { margin-top: 20px; }
+.scroll-hint {
+  position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  color: var(--dim); font-size: 10px; letter-spacing: .12em;
+  animation: bob 1.8s ease-in-out infinite;
+}
+.scroll-hint:hover { color: var(--text); }
+.scroll-arrow { font-size: 14px; line-height: 1; }
+@keyframes bob { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 5px); } }
+
 .home-hero {
   display: flex; align-items: center; justify-content: space-between; gap: 26px;
   padding: 28px; border-radius: 22px;
@@ -730,6 +757,14 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   .topbar-right { gap: 7px; }
   .view-container { padding: 18px 16px 100px; }
   .home-hero { flex-direction: column; align-items: flex-start; padding: 20px; }
+  .home-timer-hero { min-height: calc(100vh - 186px); padding-bottom: 46px; margin-bottom: 18px; }
+  .home-timer-hero .focus-stage { padding: 18px 16px 20px; border-radius: 20px; }
+  .home-timer-hero .mode-tabs { margin-bottom: 14px; flex-wrap: wrap; justify-content: center; }
+  .home-timer-hero .mode-tab { padding: 7px 10px; font-size: 11px; }
+  .home-timer-hero .timer-ring { width: min(250px, 66vw, 34vh); height: min(250px, 66vw, 34vh); }
+  .home-timer-hero .timer-time { font-size: clamp(42px, 7vh, 54px); }
+  .home-timer-hero .timer-controls { margin-top: 18px; }
+  .home-timer-hero .timer-controls .btn { min-width: 0; }
   .home-ring { width: 100%; justify-content: flex-start; }
   .quick-stats { grid-template-columns: 1fr 1fr; }
   .cd-help { width: 22px; height: 22px; font-size: 11px; }
@@ -768,6 +803,9 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   .duel-arena { padding: 18px; }
   .timer-ring { width: 230px; height: 230px; }
   .timer-time { font-size: 52px; }
+  .home-timer-hero .timer-ring { width: min(230px, 64vw, 32vh); height: min(230px, 64vw, 32vh); }
+  .home-timer-hero .timer-time { font-size: clamp(40px, 6.5vh, 48px); }
+  .home-timer-hero .timer-controls .btn { flex: 1; }
   .hero-actions .btn, .home-actions .btn { flex: 1; }
   .week-bars { height: 100px; gap: 5px; }
   .xp-track { max-width: 20vw; }
@@ -777,6 +815,16 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   .ob-rival { padding: 11px 12px; }
   .ob-actions .btn { flex: 1; }
   .tour-card { padding: 16px; }
+}
+
+@media (min-width: 821px) and (max-height: 820px) {
+  .home-timer-hero { padding-bottom: 38px; }
+  .home-timer-hero .focus-stage { padding: 20px 24px 18px; }
+  .home-timer-hero .mode-tabs { margin-bottom: 12px; }
+  .home-timer-hero .timer-combo { margin-top: 8px; }
+  .home-timer-hero .focus-reward-inline { margin-top: 8px; }
+  .home-timer-hero .timer-controls { margin-top: 14px; }
+  .home-timer-hero .focus-why { margin-top: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
