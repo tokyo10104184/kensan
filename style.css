@@ -633,6 +633,58 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .shop-buy { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
 .shop-item.soldout { opacity: .55; }
 
+/* ---------------- onboarding wizard ---------------- */
+.ob-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.ob-brand { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; letter-spacing: .08em; }
+.ob-count { font-size: 9px; letter-spacing: .16em; color: var(--dim); font-weight: 800; }
+.ob-progress { height: 4px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; margin-bottom: 24px; }
+.ob-progress i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--motivation), var(--obsession)); transition: width .35s cubic-bezier(.22,1,.36,1); }
+.ob-title { margin: 0 0 6px; font-size: 23px; line-height: 1.35; }
+.ob-sub { margin: 0 0 20px; color: var(--muted); font-size: 12.5px; line-height: 1.65; }
+.ob-note { margin-top: 14px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,.03); color: var(--dim); font-size: 11px; line-height: 1.6; }
+.ob-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.ob-chip { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); font-size: 11.5px; transition: .18s; text-align: left; }
+.ob-chip:hover { border-color: var(--border-strong); color: var(--text); }
+.ob-chip.selected { border-color: var(--motivation); background: rgba(255,106,77,.12); color: var(--text); }
+.ob-rivals { display: flex; flex-direction: column; gap: 9px; }
+.ob-rival { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border-radius: 13px; border: 1px solid var(--border); background: var(--panel); text-align: left; transition: .18s; }
+.ob-rival:hover { border-color: var(--border-strong); }
+.ob-rival.selected { border-color: var(--rival-c); background: rgba(255,255,255,.05); box-shadow: 0 0 20px color-mix(in srgb, var(--rival-c) 16%, transparent); }
+.ob-rival .rival-avatar { font-size: 26px; }
+.ob-rival .rival-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ob-rival .rival-info strong { font-size: 13px; }
+.ob-rival .rival-info small { font-size: 10px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ob-rival .rival-min { font-size: 16px; font-weight: 800; color: var(--rival-c); font-variant-numeric: tabular-nums; }
+.ob-rival .rival-min small { font-size: 9px; color: var(--muted); font-weight: 400; }
+.ob-focus { display: flex; gap: 8px; }
+.ob-focus-opt { flex: 1; padding: 12px 8px; border-radius: 11px; border: 1px solid var(--border); background: var(--panel); text-align: center; transition: .18s; }
+.ob-focus-opt strong { display: block; font-size: 15px; }
+.ob-focus-opt small { font-size: 9.5px; color: var(--dim); }
+.ob-focus-opt.selected { border-color: var(--ego); background: rgba(255,201,74,.1); }
+.ob-summary { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.ob-summary > div { display: flex; justify-content: space-between; gap: 14px; padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.ob-summary > div:last-child { border-bottom: none; }
+.ob-summary span { color: var(--muted); flex: 0 0 auto; }
+.ob-summary strong { text-align: right; font-weight: 700; }
+.ob-actions { display: flex; align-items: center; gap: 10px; margin-top: 24px; }
+
+/* ---------------- guided tour ---------------- */
+.tour-overlay { position: fixed; inset: 0; z-index: 300; }
+.tour-spot {
+  position: fixed; border-radius: 12px; border: 2px solid var(--ego);
+  box-shadow: 0 0 0 9999px rgba(3,3,7,.76), 0 0 30px rgba(255,201,74,.35);
+  pointer-events: none; transition: all .28s ease;
+}
+.tour-card {
+  position: fixed; z-index: 301; padding: 18px; border-radius: 16px;
+  background: #12121c; border: 1px solid var(--border-strong);
+  box-shadow: 0 24px 60px rgba(0,0,0,.65); animation: fadeIn .22s ease;
+}
+.tour-step { font-size: 9px; letter-spacing: .18em; color: var(--ego); font-weight: 800; margin-bottom: 6px; }
+.tour-card h3 { margin: 0 0 6px; font-size: 16px; }
+.tour-card p { margin: 0 0 14px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.tour-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
 /* ---------------- responsive ---------------- */
 @media (max-width: 1080px) {
   .focus-layout { grid-template-columns: 1fr; }
@@ -694,6 +746,12 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   .hero-actions .btn, .home-actions .btn { flex: 1; }
   .week-bars { height: 100px; gap: 5px; }
   .xp-track { max-width: 20vw; }
+  .ob-title { font-size: 20px; }
+  .ob-sub { font-size: 12px; margin-bottom: 16px; }
+  .ob-summary > div { font-size: 11.5px; padding: 10px 12px; }
+  .ob-rival { padding: 11px 12px; }
+  .ob-actions .btn { flex: 1; }
+  .tour-card { padding: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

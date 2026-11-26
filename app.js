@@ -83,6 +83,7 @@
     return {
       version: 1,
       onboarded: false,
+      tourDone: false,
       profile: { name: '修行者', why: '将来の自分を誇れるように。', avatar: '🔥' },
       stats: {
         xp: 0, gold: 60,
@@ -1004,21 +1005,212 @@
   }
   function closeModal() { $('#modal-root').innerHTML = ''; }
 
+  /* ---------------- interactive onboarding ---------------- */
+  const WHY_PRESETS = [
+    '合格して、未来を選べる自分になる',
+    '負けたくない',
+    '家族を安心させたい',
+    '自分の限界を知りたい',
+    '好きなことを仕事にしたい',
+  ];
+  const OB_TOTAL = 5;
+  let ob = null;
+
   function onboardingModal() {
+    ob = {
+      step: 0,
+      name: state.profile.name === '修行者' ? '' : state.profile.name,
+      why: state.profile.why === '将来の自分を誇れるように。' ? '' : state.profile.why,
+      avatar: state.profile.avatar || '🔥',
+      rivalId: state.duel.selected || 'hokuto',
+      focusMin: state.settings.focusMin || 25,
+      taskTitle: '',
+      taskSubject: '',
+      difficulty: 2,
+    };
+    renderOnboarding();
+  }
+
+  function captureObStep() {
+    if (!ob) return;
+    const name = $('#ob-name'); if (name) ob.name = name.value.trim();
+    const why = $('#ob-why'); if (why) ob.why = why.value.trim();
+    const task = $('#ob-task'); if (task) ob.taskTitle = task.value.trim();
+    const subject = $('#ob-task-subject'); if (subject) ob.taskSubject = subject.value.trim();
+    const diff = $('#ob-task-diff'); if (diff) ob.difficulty = Number(diff.value) || 2;
+  }
+
+  function obBody() {
+    if (ob.step === 0) {
+      return `
+        <h2 class="ob-title">ようこそ、研鑽へ。</h2>
+        <p class="ob-sub">勉強したくなる仕掛けでできた道場です。まずは、あなたのことを教えてください。</p>
+        <div class="field"><label>呼び名</label><input id="ob-name" maxlength="20" placeholder="例：アキ" value="${esc(ob.name)}" /></div>
+        <div class="field"><label>分身（アイコン）</label><div class="avatar-picker">${AVATARS.map((a) => `<button class="avatar-option ${a === ob.avatar ? 'selected' : ''}" data-action="ob-avatar" data-avatar="${a}">${a}</button>`).join('')}</div></div>
+        <div class="ob-note">💡 名前やアイコンは、あとから「⚙」でいつでも変更できます。</div>`;
+    }
+    if (ob.step === 1) {
+      return `
+        <h2 class="ob-title">なぜ、勉強する？</h2>
+        <p class="ob-sub">この答えが、やる気が落ちたときにあなたを連れ戻します。</p>
+        <div class="ob-chips">${WHY_PRESETS.map((w) => `<button class="ob-chip ${ob.why === w ? 'selected' : ''}" data-action="ob-why" data-why="${esc(w)}">${esc(w)}</button>`).join('')}</div>
+        <div class="field"><label>自分の言葉で（自由に）</label><textarea id="ob-why" placeholder="例：行きたい大学に合格して、家族を安心させたい">${esc(ob.why)}</textarea></div>
+        <div class="ob-note">💡 ここで書いた言葉は、ホームと集中画面に表示されます。</div>`;
+    }
+    if (ob.step === 2) {
+      return `
+        <h2 class="ob-title">最初のライバルを選ぶ</h2>
+        <p class="ob-sub">架空の修行者と「今日の集中時間」で勝負します。追い抜くとボーナス。</p>
+        <div class="ob-rivals">${RIVALS.filter(isUnlocked).map((r) => `
+          <button class="ob-rival ${ob.rivalId === r.id ? 'selected' : ''}" data-action="ob-rival" data-id="${r.id}" style="--rival-c:${r.color}">
+            <span class="rival-avatar">${r.avatar}</span>
+            <span class="rival-info"><strong>${esc(r.name)}</strong><small>${esc(r.title)} ・ ${esc(r.style)}</small></span>
+            <span class="rival-min">${rivalMinutes(r)}<small>分</small></span>
+          </button>`).join('')}</div>
+        <div class="ob-note">💡 ライバルは毎日少しずつ強くなります。まずは今日、1セッションから。</div>`;
+    }
+    if (ob.step === 3) {
+      return `
+        <h2 class="ob-title">集中の長さと、最初のタスク</h2>
+        <p class="ob-sub">無理のない長さで始めましょう。あとから変えられます。</p>
+        <div class="field"><label>1セッションの長さ</label><div class="ob-focus">${[15, 25, 45].map((m) => `<button class="ob-focus-opt ${ob.focusMin === m ? 'selected' : ''}" data-action="ob-focus" data-min="${m}"><strong>${m}分</strong><small>${m === 15 ? '軽め' : m === 25 ? '標準' : 'しっかり'}</small></button>`).join('')}</div></div>
+        <div class="field"><label>最初のタスク（任意）</label><input id="ob-task" maxlength="60" placeholder="例：英単語 50個を覚える" value="${esc(ob.taskTitle)}" /></div>
+        <div style="display:flex;gap:8px">
+          <input class="intent-input" id="ob-task-subject" placeholder="科目" style="flex:1" value="${esc(ob.taskSubject)}" />
+          <select class="intent-input" id="ob-task-diff" style="flex:0 0 104px">
+            <option value="1" ${ob.difficulty === 1 ? 'selected' : ''}>★ 易</option>
+            <option value="2" ${ob.difficulty === 2 ? 'selected' : ''}>★★ 中</option>
+            <option value="3" ${ob.difficulty === 3 ? 'selected' : ''}>★★★ 難</option>
+          </select>
+        </div>
+        <div class="ob-note">💡 タスクは「タスク」画面からいつでも追加・削除できます。</div>`;
+    }
+    const rival = RIVALS.find((r) => r.id === ob.rivalId) || RIVALS[0];
+    return `
+      <h2 class="ob-title">準備完了。</h2>
+      <p class="ob-sub">この設定で道場の門をくぐります。</p>
+      <div class="ob-summary">
+        <div><span>名前</span><strong>${ob.avatar} ${esc(ob.name || '修行者')}</strong></div>
+        <div><span>なぜ</span><strong>「${esc(ob.why || '将来の自分を誇れるように。')}」</strong></div>
+        <div><span>ライバル</span><strong>${esc(rival.name)}（${esc(rival.title)}）</strong></div>
+        <div><span>集中</span><strong>${ob.focusMin} 分</strong></div>
+        <div><span>最初のタスク</span><strong>${esc(ob.taskTitle || 'なし')}</strong></div>
+      </div>
+      <div class="ob-note">💡 次に、画面の使い方を30秒で案内します。</div>`;
+  }
+
+  function renderOnboarding() {
+    const pct = ((ob.step + 1) / OB_TOTAL) * 100;
     openModal(`
-      <div style="text-align:center;margin-bottom:22px">
-        <div style="font-size:42px">🔥</div>
-        <h2 style="margin:8px 0 4px">研鑽へ、ようこそ。</h2>
-        <div class="sub">ここは、勉強したくなる仕掛けでできた道場だ。</div>
+      <div class="ob-wrap">
+        <div class="ob-top">
+          <div class="ob-brand"><span class="brand-mark small">研</span> 研鑽 KENSAN</div>
+          <span class="ob-count">STEP ${ob.step + 1} / ${OB_TOTAL}</span>
+        </div>
+        <div class="ob-progress"><i style="width:${pct}%"></i></div>
+        ${obBody()}
+        <div class="ob-actions">
+          ${ob.step > 0 ? '<button class="btn ghost" data-action="ob-back">← 戻る</button>' : '<button class="btn ghost" data-action="ob-skip">スキップ</button>'}
+          <div style="flex:1"></div>
+          ${ob.step < OB_TOTAL - 1
+            ? '<button class="btn primary" data-action="ob-next">次へ →</button>'
+            : '<button class="btn primary" data-action="ob-finish">道場に入る →</button>'}
+        </div>
       </div>
-      <div class="field"><label>あなたの名（称号カードに刻まれる）</label><input id="onb-name" value="${esc(state.profile.name)}" maxlength="20" /></div>
-      <div class="field"><label>なぜ、勉強する？ — 最も重要だ。迷ったらここに戻る。</label><textarea id="onb-why" placeholder="例：親に誇れる自分になりたい">${esc(state.profile.why)}</textarea></div>
-      <div class="field"><label>分身を選べ</label><div class="avatar-picker" id="onb-avatars">${AVATARS.map((a) => `<button class="avatar-option ${a === state.profile.avatar ? 'selected' : ''}" data-action="pick-avatar" data-avatar="${a}">${a}</button>`).join('')}</div></div>
-      <div style="padding:12px;border-radius:11px;background:rgba(181,107,255,.08);border:1px solid var(--border);font-size:11.5px;color:var(--muted);line-height:1.7">
-        意欲・規律・執着・自我。<br>四つの欲を無駄にせず、学習の燃料に変える。まずは25分、斬ってみろ。
-      </div>
-      <div class="modal-actions"><button class="btn primary block" data-action="finish-onboarding">修行を始める →</button></div>
     `, { closable: false });
+  }
+
+  function applyOnboarding() {
+    state.profile.name = ob.name || '修行者';
+    state.profile.why = ob.why || '将来の自分を誇れるように。';
+    state.profile.avatar = ob.avatar || '🔥';
+    state.settings.focusMin = ob.focusMin || 25;
+    state.duel.selected = ob.rivalId || 'hokuto';
+    state.focus.mode = 'focus';
+    state.focus.minutes = state.settings.focusMin;
+    state.focus.remaining = state.focus.minutes * 60;
+    state.focus.running = false;
+    state.focus.endAt = null;
+    if (ob.taskTitle) {
+      state.tasks.push({
+        id: uid(), title: ob.taskTitle, subject: ob.taskSubject || '科目なし',
+        difficulty: ob.difficulty || 2, estimate: ob.difficulty || 2, done: false, createdAt: todayKey(),
+      });
+    }
+    state.onboarded = true;
+    state.tourDone = false;
+    state.stats.lastActiveDate = todayKey();
+    save();
+  }
+
+  /* ---------------- guided tour ---------------- */
+  let tourSteps = [];
+  let tourIndex = 0;
+
+  function buildTourSteps() {
+    const mobile = window.matchMedia('(max-width: 820px)').matches;
+    return [
+      { sel: mobile ? '#mobile-level' : '#level-badge', title: 'レベルとXP', text: '集中するたびにXPが貯まり、称号が上がっていきます。', place: 'bottom' },
+      { sel: '.stat-pill.streak', title: '連続日数と金貨', text: '毎日続けると炎が育ちます。1日空けると四つの力が衰えるので注意。', place: 'bottom' },
+      { sel: '.quick-stats .stat-tile:nth-child(3)', title: 'ライバルとの差', text: '架空の修行者と今日の集中時間で勝負。追い抜くとボーナスがもらえます。', place: 'bottom' },
+      { sel: mobile ? '.mobile-nav [data-view="quests"]' : '.side-nav [data-view="quests"]', title: 'タスク', text: '今日やることを登録して、一つずつ片付けましょう。', place: mobile ? 'top' : 'right' },
+      { sel: mobile ? '.fab' : '.topbar-cta', title: '準備完了', text: '迷ったらここ。最初のセッションを始めましょう。', place: mobile ? 'top' : 'bottom' },
+    ];
+  }
+
+  function startTour() {
+    tourSteps = buildTourSteps().filter((s) => document.querySelector(s.sel));
+    tourIndex = 0;
+    if (!tourSteps.length) { finishTour(false); return; }
+    renderTourStep();
+  }
+
+  function renderTourStep() {
+    const step = tourSteps[tourIndex];
+    const el = document.querySelector(step.sel);
+    if (!el) { nextTour(); return; }
+    el.scrollIntoView({ block: 'center', inline: 'center' });
+    requestAnimationFrame(() => {
+      const r = el.getBoundingClientRect();
+      const pad = 7;
+      const spot = { top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 };
+      const cardW = Math.min(300, window.innerWidth - 32);
+      const cardH = 176;
+      let top, left;
+      if (step.place === 'top') { top = spot.top - cardH - 14; left = spot.left + spot.width / 2 - cardW / 2; }
+      else if (step.place === 'left') { top = spot.top + spot.height / 2 - cardH / 2; left = spot.left - cardW - 14; }
+      else if (step.place === 'right') { top = spot.top + spot.height / 2 - cardH / 2; left = spot.left + spot.width + 14; }
+      else { top = spot.top + spot.height + 14; left = spot.left + spot.width / 2 - cardW / 2; }
+      left = Math.max(16, Math.min(window.innerWidth - cardW - 16, left));
+      top = Math.max(16, Math.min(window.innerHeight - cardH - 16, top));
+      $('#tour-root').innerHTML = `
+        <div class="tour-overlay">
+          <div class="tour-spot" style="top:${spot.top}px;left:${spot.left}px;width:${spot.width}px;height:${spot.height}px"></div>
+          <div class="tour-card" style="top:${top}px;left:${left}px;width:${cardW}px">
+            <div class="tour-step">GUIDE ${tourIndex + 1} / ${tourSteps.length}</div>
+            <h3>${step.title}</h3>
+            <p>${step.text}</p>
+            <div class="tour-actions">
+              <button class="btn small ghost" data-action="tour-skip">スキップ</button>
+              <button class="btn small primary" data-action="tour-next">${tourIndex === tourSteps.length - 1 ? '集中を始める' : '次へ →'}</button>
+            </div>
+          </div>
+        </div>`;
+    });
+  }
+
+  function nextTour() {
+    if (tourIndex >= tourSteps.length - 1) { finishTour(true); return; }
+    tourIndex += 1;
+    renderTourStep();
+  }
+
+  function finishTour(startFocus) {
+    $('#tour-root').innerHTML = '';
+    state.tourDone = true;
+    save();
+    if (startFocus) { go('focus'); setMode('focus'); startTimer(); }
+    else toast('準備完了。いつでも「集中する」から始められます。');
   }
 
   function profileModal() {
@@ -1039,6 +1231,7 @@
         <label style="margin:0">完了時に通知</label>
         <button class="btn small ${state.settings.notify ? 'primary' : ''}" data-action="toggle-notify">${state.settings.notify ? 'ON' : 'OFF'}</button>
       </div>
+      <button class="btn block ghost" style="margin-top:4px" data-action="replay-tour">❔ 使い方ガイドをもう一度見る</button>
       <div class="modal-actions">
         <button class="btn ghost" data-action="reset-data">データを消す</button>
         <button class="btn primary" data-action="save-profile">保存する</button>
@@ -1169,8 +1362,8 @@
         state.profile.avatar = $('#prof-avatars .avatar-option.selected')?.dataset.avatar || state.profile.avatar;
         state.settings.focusMin = Number($('#set-focus').value);
         state.settings.breakMin = Number($('#set-break').value);
-        if (state.focus.mode === 'focus') { state.focus.minutes = state.settings.focusMin * 60; if (!state.focus.running) state.focus.remaining = state.focus.minutes; }
-        if (state.focus.mode === 'short') { state.focus.minutes = state.settings.breakMin * 60; if (!state.focus.running) state.focus.remaining = state.focus.minutes; }
+        if (state.focus.mode === 'focus') { state.focus.minutes = state.settings.focusMin; if (!state.focus.running) state.focus.remaining = state.focus.minutes * 60; }
+        if (state.focus.mode === 'short') { state.focus.minutes = state.settings.breakMin; if (!state.focus.running) state.focus.remaining = state.focus.minutes * 60; }
         closeModal(); save(); renderAll(); toast('設定を保存した');
         break;
       }
@@ -1189,15 +1382,29 @@
           <div class="modal-actions"><button class="btn ghost" data-action="close-modal">やめる</button><button class="btn primary" data-action="confirm-reset">消す</button></div>`);
         break;
       case 'confirm-reset':
-        state = defaultState(); state.onboarded = false; save(); closeModal(); onboardingModal(); break;
-      case 'finish-onboarding':
-        state.profile.name = $('#onb-name').value.trim() || '修行者';
-        state.profile.why = $('#onb-why').value.trim() || '将来の自分を誇れるように。';
-        state.profile.avatar = $('#onb-avatars .avatar-option.selected')?.dataset.avatar || '🔥';
-        state.onboarded = true; state.stats.lastActiveDate = todayKey();
-        save(); closeModal(); renderAll();
-        toast('道場の門が開いた。まずは25分、斬れ。');
+        state = defaultState(); save(); closeModal(); onboardingModal(); break;
+      case 'ob-next': captureObStep(); ob.step = Math.min(OB_TOTAL - 1, ob.step + 1); renderOnboarding(); break;
+      case 'ob-back': captureObStep(); ob.step = Math.max(0, ob.step - 1); renderOnboarding(); break;
+      case 'ob-skip':
+        applyOnboarding();
+        state.tourDone = true;
+        save(); closeModal(); go('home'); renderAll();
+        toast('設定は「⚙」からいつでも変更できます');
         break;
+      case 'ob-avatar': captureObStep(); ob.avatar = el.dataset.avatar; renderOnboarding(); break;
+      case 'ob-why': captureObStep(); ob.why = el.dataset.why; renderOnboarding(); break;
+      case 'ob-rival': captureObStep(); ob.rivalId = el.dataset.id; renderOnboarding(); break;
+      case 'ob-focus': captureObStep(); ob.focusMin = Number(el.dataset.min); renderOnboarding(); break;
+      case 'ob-finish':
+        captureObStep();
+        applyOnboarding();
+        closeModal();
+        go('home');
+        startTour();
+        break;
+      case 'tour-next': nextTour(); break;
+      case 'tour-skip': finishTour(false); break;
+      case 'replay-tour': closeModal(); go('home'); setTimeout(startTour, 300); break;
       case 'select-rival': selectRival(el.dataset.id); break;
       case 'claim-quest': claimQuest(el.dataset.id); break;
       case 'add-task': addTask(); break;
@@ -1243,6 +1450,11 @@
     }
     if (remain <= 0) completeSession();
   }, 250);
+
+  window.addEventListener('resize', () => {
+    const tourRoot = $('#tour-root');
+    if (tourRoot && tourRoot.children.length) renderTourStep();
+  });
 
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && state.focus.running) {
