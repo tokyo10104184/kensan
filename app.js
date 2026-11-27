@@ -730,7 +730,7 @@
     renderDriverMini();
     renderNav();
     const view = $('#view');
-    const renders = { home: viewHome, focus: viewFocus, quests: viewQuests, rpg: viewRpg, rivals: viewRivals, shop: viewShop };
+    const renders = { home: viewHome, quests: viewQuests, rpg: viewRpg, rivals: viewRivals, shop: viewShop };
     view.innerHTML = `<div class="view">${(renders[state.view] || viewHome)()}</div>`;
     if ($('#timer-ring')) updateTimerDom();
   }
@@ -785,12 +785,12 @@
       </div>
 
       <div class="quick-stats">
-        <button class="stat-tile" data-action="nav" data-view="focus">
+        <button class="stat-tile" data-action="scroll-timer">
           <span class="stat-tile-icon" style="color:var(--motivation)">🔥</span>
           <span class="stat-tile-value">${t.minutes}<small>分</small></span>
           <span class="stat-tile-label">今日の集中</span>
         </button>
-        <button class="stat-tile" data-action="nav" data-view="focus">
+        <button class="stat-tile" data-action="scroll-timer">
           <span class="stat-tile-icon" style="color:var(--discipline)">⚡</span>
           <span class="stat-tile-value">x${comboMult().toFixed(1)}</span>
           <span class="stat-tile-label">コンボ倍率</span>
@@ -973,31 +973,6 @@
     `;
   }
 
-  function viewFocus() {
-    const t = todayStats();
-    const duel = duelStatus();
-    return `
-      <div class="focus-layout">
-        <div class="focus-stage">${timerStageHtml()}</div>
-
-        <div class="focus-side">
-          <div class="card">
-            <div class="side-title-row"><h3>今日の記録</h3><span class="tag">🔥 ${state.stats.streak}日連続</span></div>
-            <div class="session-stat"><span>集中時間</span><strong>${t.minutes} 分</strong></div>
-            <div class="session-stat"><span>セッション</span><strong>${t.sessions} 回</strong></div>
-            <div class="session-stat"><span>コンボ倍率</span><strong style="color:var(--obsession)">x${comboMult().toFixed(1)}</strong></div>
-            <div class="session-stat"><span>今日のライバル</span><strong>${esc(duel.rival.name)} ${duel.rivalMin}分</strong></div>
-          </div>
-
-          <div class="card focus-tip">
-            <div class="tip-label">ライバルからの一言</div>
-            <p>${rivalTaunt(duel.rival)}</p>
-            <button class="btn small ghost" data-action="nav" data-view="rivals">対決を見る →</button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
   function updateTimerDom() {
     const timeEl = $('#timer-time');
     if (!timeEl) return;
@@ -1754,6 +1729,7 @@
       case 'quick-start': startFocusInHome(); break;
       case 'start-focus': startFocusInHome(); break;
       case 'scroll-home': $('#home-classic')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); break;
+      case 'scroll-timer': $('#home-timer-hero')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); break;
       case 'rpg-new-boss': bossModal(); break;
       case 'rpg-create-boss': {
         const name = $('#boss-name').value.trim() || '定期試験';

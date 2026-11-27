@@ -338,7 +338,6 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .heat-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 
 /* focus view */
-.focus-layout { display: grid; grid-template-columns: 1fr 340px; gap: 22px; align-items: start; }
 .focus-stage {
   display: flex; flex-direction: column; align-items: center;
   padding: 34px 24px 30px; border-radius: 24px;
@@ -367,7 +366,6 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   font-size: 12px; color: var(--muted); font-style: italic;
 }
 .focus-why strong { color: var(--motivation); font-style: normal; }
-.focus-side { display: flex; flex-direction: column; gap: 16px; }
 
 .intent-input {
   width: 100%; padding: 11px 13px; border-radius: 10px;
@@ -375,11 +373,6 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   font-size: 12px; outline: none;
 }
 .intent-input:focus { border-color: var(--obsession); }
-
-.session-stat { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
-.session-stat:last-child { border-bottom: none; }
-.session-stat span { color: var(--muted); }
-.session-stat strong { font-variant-numeric: tabular-nums; }
 
 /* duel arena */
 .duel-arena {
@@ -658,9 +651,6 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .focus-reward-inline strong { color: var(--ego); }
 .side-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
 .side-title-row h3 { margin: 0; font-size: 13px; }
-.focus-tip { border-color: rgba(181,107,255,.25); background: linear-gradient(135deg, rgba(181,107,255,.09), var(--panel)); }
-.tip-label { font-size: 9.5px; letter-spacing: .14em; color: var(--obsession); font-weight: 800; margin-bottom: 7px; }
-.focus-tip p { margin: 0 0 12px; font-size: 12px; line-height: 1.6; }
 
 /* compact rivals */
 .rival-grid.compact { grid-template-columns: repeat(3, 1fr); }
@@ -801,8 +791,6 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 
 /* ---------------- responsive ---------------- */
 @media (max-width: 1080px) {
-  .focus-layout { grid-template-columns: 1fr; }
-  .focus-side { display: grid; grid-template-columns: 1fr 1fr; }
   .rival-grid, .rival-grid.compact { grid-template-columns: repeat(2, 1fr); }
   .rpg-layout { grid-template-columns: 1fr; }
   .rpg-side { display: grid; grid-template-columns: 1fr 1fr; }
@@ -863,7 +851,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 }
 
 @media (max-width: 520px) {
-  .drivers-grid, .focus-side, .stat-grid { grid-template-columns: 1fr 1fr; }
+  .drivers-grid, .stat-grid { grid-template-columns: 1fr 1fr; }
   .rival-grid, .rival-grid.compact { grid-template-columns: 1fr; }
   .arena-body { grid-template-columns: 1fr; }
   .versus { padding: 2px 0; }
