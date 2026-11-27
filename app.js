@@ -202,6 +202,8 @@
         history: parsed.history || {},
         tasks: parsed.tasks || [],
         questsClaimed: parsed.questsClaimed || {},
+        // 旧「集中」タブはホームに統合済み。古い保存データもホームへ寄せる。
+        view: ['home', 'quests', 'rpg', 'rivals', 'shop'].includes(parsed.view) ? parsed.view : 'home',
       };
     } catch (e) {
       console.warn('load failed', e);
