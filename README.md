@@ -18,6 +18,14 @@ node server.js
 Termux でブラウザが `localhost` に繋がらない場合は、`http://127.0.0.1:8000` を試すか、
 同じ Wi-Fi の端末からなら `http://<この端末のIP>:8000` でアクセスできます（IP は `ifconfig` で確認）。
 
+## 公開URL
+
+GitHub Pages で公開しています。
+
+- **https://tokyo10104184.github.io/kensan/**
+
+`localStorage` はオリジンごとに保存されるため、`localhost` と公開URLの学習データは別々です。
+
 ## 四つのエンジン（設計の核）
 
 | ドライバー | 仕掛け |
