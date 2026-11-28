@@ -9,6 +9,7 @@
 
   /* ---------------- constants ---------------- */
   const KEY = 'kensan_state_v1';
+  const BUILD_VERSION = '2026.11.28a';
   const AVATARS = ['🔥', '🥷', '🦊', '🐺', '🦅', '🦉', '🧠', '⚔️', '🌙', '🐉', '🧘', '🚀'];
   const TITLES = [
     { lv: 1,  name: '見習い',   en: 'APPRENTICE' },
@@ -1818,6 +1819,7 @@
         <button class="btn small ${state.settings.notify ? 'primary' : ''}" data-action="toggle-notify">${state.settings.notify ? 'ON' : 'OFF'}</button>
       </div>
       <button class="btn block ghost" style="margin-top:4px" data-action="replay-tour">❔ 使い方ガイドをもう一度見る</button>
+      <p class="muted" style="font-size:10px;text-align:center;margin:14px 0 0">Build ${BUILD_VERSION} ・ ボスノルマ制</p>
       <div class="modal-actions">
         <button class="btn ghost" data-action="reset-data">データを消す</button>
         <button class="btn primary" data-action="save-profile">保存する</button>
