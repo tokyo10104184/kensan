@@ -517,6 +517,28 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
 .toast.out { opacity: 0; transform: translateX(20px); transition: .3s; }
 
+/* phase transition popup */
+#phase-root { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; pointer-events: none; }
+#phase-root:empty { display: none; }
+.phase-pop {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  min-width: 240px; max-width: min(420px, 82vw); padding: 20px 28px;
+  border-radius: 20px; border: 1px solid rgba(255,201,74,.35);
+  background: rgba(10,10,18,.92); backdrop-filter: blur(10px);
+  box-shadow: 0 24px 70px rgba(0,0,0,.65);
+  text-align: center;
+  animation: phasePop 1.5s cubic-bezier(.22,1,.36,1) forwards;
+}
+.phase-icon { font-size: 34px; line-height: 1; }
+.phase-pop strong { font-size: 16px; letter-spacing: .04em; }
+.phase-pop small { font-size: 11px; color: var(--muted); line-height: 1.5; }
+@keyframes phasePop {
+  0% { opacity: 0; transform: scale(.82) translateY(14px); }
+  16% { opacity: 1; transform: scale(1) translateY(0); }
+  76% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.05) translateY(-10px); }
+}
+
 /* fx particles */
 #fx-root { position: fixed; inset: 0; pointer-events: none; z-index: 150; overflow: hidden; }
 .particle { position: absolute; font-size: 18px; animation: floatUp 1.4s ease-out forwards; }
@@ -950,11 +972,13 @@ body.focus-mode .home-timer-hero {
   animation: focusModeIn .3s cubic-bezier(.22,1,.36,1);
 }
 body.focus-mode .home-timer-hero::before {
-  content: '集中モード';
+  content: '集中フェーズ';
   position: absolute; top: max(26px, env(safe-area-inset-top)); left: 50%;
   transform: translateX(-50%);
   font-size: 10px; font-weight: 800; letter-spacing: .32em; color: var(--dim);
 }
+body.focus-mode[data-phase="short"] .home-timer-hero::before { content: '休憩フェーズ'; }
+body.focus-mode[data-phase="long"] .home-timer-hero::before { content: '長休憩フェーズ'; }
 body.focus-mode .home-timer-hero .focus-stage {
   width: 100%; max-width: 760px; padding: 0;
   border: none; background: transparent; box-shadow: none;

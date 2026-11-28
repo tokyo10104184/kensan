@@ -9,7 +9,7 @@
 
   /* ---------------- constants ---------------- */
   const KEY = 'kensan_state_v1';
-  const BUILD_VERSION = '2026.11.28d';
+  const BUILD_VERSION = '2026.11.28e';
   const AVATARS = ['🔥', '🥷', '🦊', '🐺', '🦅', '🦉', '🧠', '⚔️', '🌙', '🐉', '🧘', '🚀'];
   const TITLES = [
     { lv: 1,  name: '見習い',   en: 'APPRENTICE' },
@@ -186,6 +186,7 @@
   let lastTickSave = 0;
   let bossCalScrolledFor = null;
   let audioCtx = null;
+  let phasePopupTimer = null;
 
   function load() {
     try {
@@ -265,11 +266,6 @@
     for (const t of TITLES) if (level >= t.lv) title = t;
     return { level, into, need: 200, title, pct: (into / 200) * 100 };
   }
-  function nextTitle() {
-    const lv = levelInfo().level;
-    return TITLES.find((t) => t.lv > lv) || null;
-  }
-
   function toast(msg) {
     const root = $('#toast-root');
     const el = document.createElement('div');
@@ -290,6 +286,18 @@
       root.appendChild(el);
       setTimeout(() => el.remove(), 1900);
     }
+  }
+  // フェーズ切れ目の短いポップアップ。結果画面は出さず、次のフェーズへ流れる。
+  function phasePopup(icon, title, sub) {
+    const root = $('#phase-root');
+    if (!root) return;
+    if (phasePopupTimer) clearTimeout(phasePopupTimer);
+    root.innerHTML = `<div class="phase-pop">
+      <span class="phase-icon">${esc(icon)}</span>
+      <strong>${esc(title)}</strong>
+      <small>${esc(sub)}</small>
+    </div>`;
+    phasePopupTimer = setTimeout(() => { root.innerHTML = ''; phasePopupTimer = null; }, 1500);
   }
   function getAudioCtx() {
     if (!state.settings.sound) return null;
@@ -444,8 +452,12 @@
     if (!wasFocus) {
       boostDriver('motivation', 1);
       sfx('success');
-      toast('休憩完了。集中の燃料を補給した。');
-      renderAll();
+      state.focus.mode = 'focus';
+      state.focus.minutes = state.settings.focusMin;
+      state.focus.remaining = state.focus.minutes * 60;
+      phasePopup('🔥', '休憩完了', `${state.settings.focusMin}分の集中へ`);
+      save();
+      startTimer();
       return;
     }
 
@@ -500,28 +512,24 @@
     notify('研鑽 — セッション完了', `+${xpGain} XP  /  +${goldGain} 金貨  /  コンボ x${comboMult().toFixed(1)}${rpgHitText(rpgHit)}`);
     particles('🔥', 14);
     if (rpgHit) particles(rpgHit.defeated ? '🏆' : rpgHit.bonus ? '⚡' : '⚔', rpgHit.defeated ? 16 : 8);
-    renderAll();
 
-    openModal(`
-      <div class="celebrate">
-        <div class="big-icon">🔥</div>
-        <h2>${minutes}分、斬り切った。</h2>
-        <p class="sub">${esc(state.profile.name)} — ${levelInfo().title.name}・Lv.${levelInfo().level}</p>
-        <div class="reward-line">
-          <div><strong>+${xpGain}</strong><small>XP</small></div>
-          <div><strong>+${goldGain}</strong><small>金貨</small></div>
-          <div><strong>x${comboMult().toFixed(1)}</strong><small>コンボ</small></div>
-          <div><strong>${s.streak}日</strong><small>連続</small></div>
-        </div>
-        ${rpgHitHtml(rpgHit)}
-        <p class="muted" style="font-size:12px">${nextTitle() ? `次の称号「${nextTitle().name}」まであと ${nextTitle().lv - levelInfo().level} レベル。` : 'すでに伝説。その名は語り継がれる。'}</p>
-        <div class="modal-actions center" style="justify-content:center">
-          <button class="btn" data-action="continue-after-session">☕ ${state.settings.breakMin}分休憩する</button>
-          <button class="btn primary" data-action="continue-focus">▶ 続けて集中する</button>
-          <button class="btn ghost" data-action="close-modal">閉じる</button>
-        </div>
-      </div>
-    `);
+    let rpgNote = '';
+    if (rpgHit) {
+      if (rpgHit.defeated) rpgNote = ` · ${rpgHit.name} 討伐！`;
+      else if (rpgHit.bonus) rpgNote = ` · 超過ボーナス +${rpgHit.bonusXp} XP`;
+      else rpgNote = ` · ${rpgHit.name} に${rpgHit.dmg}ダメージ`;
+    }
+    phasePopup(
+      rpgHit && rpgHit.defeated ? '🏆' : '🔥',
+      '集中完了',
+      `${state.settings.breakMin}分の休憩へ${rpgNote}`,
+    );
+
+    state.focus.mode = 'short';
+    state.focus.minutes = state.settings.breakMin;
+    state.focus.remaining = state.focus.minutes * 60;
+    save();
+    startTimer();
   }
 
   /* ---------------- quests ---------------- */
@@ -887,16 +895,6 @@
     state.rpg.target = 'boss';
     save();
   }
-  function rpgHitHtml(hit) {
-    if (!hit) return '';
-    const icon = hit.kind === 'boss' ? '👹' : '🗡';
-    if (hit.bonus) {
-      return `<div class="rpg-hit-line">${icon} <strong>${esc(hit.name)}</strong> は今日のノルマ達成済み。<br><span class="rpg-defeat-line">超過ボーナス +${hit.bonusXp} XP / +${hit.bonusGold} 金貨（超過 +${hit.over}）</span></div>`;
-    }
-    const quota = hit.kind === 'boss' ? `（今日のノルマ ${hit.sessions}/${hit.quota}）` : '';
-    const defeat = hit.defeated ? `<br><span class="rpg-defeat-line">討伐！ +${hit.xp} XP / +${hit.gold} 金貨</span>` : '';
-    return `<div class="rpg-hit-line">${icon} <strong>${esc(hit.name)}</strong> に <strong>${hit.dmg}</strong> ダメージ${quota}${defeat}</div>`;
-  }
   function rpgHitText(hit) {
     if (!hit) return '';
     if (hit.bonus) return ` / ${hit.name} 超過ボーナス +${hit.bonusXp} XP`;
@@ -989,9 +987,10 @@
     const view = $('#view');
     const renders = { home: viewHome, quests: viewQuests, rpg: viewRpg, rivals: viewRivals, shop: viewShop };
     view.innerHTML = `<div class="view">${(renders[state.view] || viewHome)()}</div>`;
-    // 集中セッション中は、タイマー以外を消した全画面モードにする。
-    const focusMode = state.focus.running && state.focus.mode === 'focus' && state.view === 'home';
+    // タイマーが動いている間は、集中／休憩を通してタイマーだけの全画面モードにする。
+    const focusMode = state.focus.running && state.view === 'home';
     document.body.classList.toggle('focus-mode', focusMode);
+    document.body.dataset.phase = focusMode ? state.focus.mode : '';
     if ($('#timer-ring')) updateTimerDom();
     if ($('#boss-calendar')) scrollBossCalendarToToday();
   }
