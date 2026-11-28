@@ -9,7 +9,7 @@
 
   /* ---------------- constants ---------------- */
   const KEY = 'kensan_state_v1';
-  const BUILD_VERSION = '2026.11.28e';
+  const BUILD_VERSION = '2026.11.28f';
   const AVATARS = ['🔥', '🥷', '🦊', '🐺', '🦅', '🦉', '🧠', '⚔️', '🌙', '🐉', '🧘', '🚀'];
   const TITLES = [
     { lv: 1,  name: '見習い',   en: 'APPRENTICE' },
@@ -51,7 +51,6 @@
         ['ショップ：連続シールド', '+2'],
       ],
       down: [
-        ['集中を途中で諦める', '-3'],
         ['1日以上空ける', '4つとも衰える'],
       ],
       tip: '毎日同じ時間に机へ座る。意志ではなく、習慣に任せるのが一番強い。',
@@ -64,7 +63,6 @@
         ['ショップ：倍率ブースト', '+2'],
       ],
       down: [
-        ['集中を途中で諦める', '-5'],
         ['1日以上空ける', '4つとも衰える'],
       ],
       tip: '連続日数とコンボを切らさない。記録が鎖になり、やめられなくなる。',
@@ -433,34 +431,8 @@
     save();
     if (!silent) renderAll();
   }
-  function giveUp() {
-    if (state.focus.mode === 'focus') {
-      state.stats.combo = 0;
-      boostDriver('discipline', -3);
-      boostDriver('obsession', -5);
-      toast('コンボが途切れた。規律 -3 / 執着 -5');
-    }
-    sfx('fail');
-    resetTimer(true);
-    renderAll();
-  }
-  function completeSession() {
-    const wasFocus = state.focus.mode === 'focus';
-    const minutes = state.focus.minutes;
-    resetTimer(true);
-
-    if (!wasFocus) {
-      boostDriver('motivation', 1);
-      sfx('success');
-      state.focus.mode = 'focus';
-      state.focus.minutes = state.settings.focusMin;
-      state.focus.remaining = state.focus.minutes * 60;
-      phasePopup('🔥', '休憩完了', `${state.settings.focusMin}分の集中へ`);
-      save();
-      startTimer();
-      return;
-    }
-
+  // 集中1セッション分の記録・報酬を処理する。通常完了と「終了」の両方から使う。
+  function awardFocusSession(minutes) {
     const s = state.stats;
     if (s.comboDate !== todayKey()) { s.combo = 0; s.comboDate = todayKey(); }
     const mult = comboMult();
@@ -484,7 +456,6 @@
     if (new Date().getHours() < 12) t.morning += 1;
     checkDuelWin();
 
-    // streak
     const today = todayKey();
     if (s.lastStudyDate !== today) {
       if (!s.lastStudyDate) s.streak = 1;
@@ -505,24 +476,38 @@
 
     const rpgHit = dealRpgDamage(minutes);
     checkQuests();
+    return { xpGain, goldGain, rpgHit };
+  }
+  function completeSession() {
+    const wasFocus = state.focus.mode === 'focus';
+    const minutes = state.focus.minutes;
+    resetTimer(true);
+
+    if (!wasFocus) {
+      boostDriver('motivation', 1);
+      sfx('success');
+      state.focus.mode = 'focus';
+      state.focus.minutes = state.settings.focusMin;
+      state.focus.remaining = state.focus.minutes * 60;
+      phasePopup('🔥', '休憩完了', `${state.settings.focusMin}分の集中へ`);
+      save();
+      startTimer();
+      return;
+    }
+
+    const result = awardFocusSession(minutes);
     save();
     chime();
-    if (rpgHit && rpgHit.defeated) sfx('victory');
-    else if (rpgHit && rpgHit.bonus) sfx('coin');
-    notify('研鑽 — セッション完了', `+${xpGain} XP  /  +${goldGain} 金貨  /  コンボ x${comboMult().toFixed(1)}${rpgHitText(rpgHit)}`);
+    if (result.rpgHit && result.rpgHit.defeated) sfx('victory');
+    else if (result.rpgHit && result.rpgHit.bonus) sfx('coin');
+    notify('研鑽 — セッション完了', `+${result.xpGain} XP  /  +${result.goldGain} 金貨  /  コンボ x${comboMult().toFixed(1)}${rpgHitText(result.rpgHit)}`);
     particles('🔥', 14);
-    if (rpgHit) particles(rpgHit.defeated ? '🏆' : rpgHit.bonus ? '⚡' : '⚔', rpgHit.defeated ? 16 : 8);
+    if (result.rpgHit) particles(result.rpgHit.defeated ? '🏆' : result.rpgHit.bonus ? '⚡' : '⚔', result.rpgHit.defeated ? 16 : 8);
 
-    let rpgNote = '';
-    if (rpgHit) {
-      if (rpgHit.defeated) rpgNote = ` · ${rpgHit.name} 討伐！`;
-      else if (rpgHit.bonus) rpgNote = ` · 超過ボーナス +${rpgHit.bonusXp} XP`;
-      else rpgNote = ` · ${rpgHit.name} に${rpgHit.dmg}ダメージ`;
-    }
     phasePopup(
-      rpgHit && rpgHit.defeated ? '🏆' : '🔥',
+      result.rpgHit && result.rpgHit.defeated ? '🏆' : '🔥',
       '集中完了',
-      `${state.settings.breakMin}分の休憩へ${rpgNote}`,
+      `${state.settings.breakMin}分の休憩へ${rpgNote(result.rpgHit)}`,
     );
 
     state.focus.mode = 'short';
@@ -530,6 +515,58 @@
     state.focus.remaining = state.focus.minutes * 60;
     save();
     startTimer();
+  }
+  // 「終了」はペナルティなし。ここまでの実時間でリザルトを出す。
+  function endSessionEarly() {
+    if (!state.focus.running) return;
+    const wasFocus = state.focus.mode === 'focus';
+    const elapsed = Math.max(0, state.focus.minutes * 60 - state.focus.remaining);
+    const minutes = Math.max(1, Math.round(elapsed / 60));
+    resetTimer(true);
+
+    if (!wasFocus) {
+      boostDriver('motivation', 1);
+      sfx('success');
+      phasePopup('☕', '休憩を終了', '次の集中へ戻ります');
+      save(); renderAll();
+      return;
+    }
+
+    const result = awardFocusSession(minutes);
+    save();
+    sfx('success');
+    if (result.rpgHit && result.rpgHit.defeated) sfx('victory');
+    else if (result.rpgHit && result.rpgHit.bonus) sfx('coin');
+    particles('🔥', 12);
+    renderAll();
+    resultModal(minutes, result);
+  }
+  function rpgNote(hit) {
+    if (!hit) return '';
+    if (hit.defeated) return ` · ${hit.name} 討伐！`;
+    if (hit.bonus) return ` · 超過ボーナス +${hit.bonusXp} XP`;
+    return ` · ${hit.name} に${hit.dmg}ダメージ`;
+  }
+  function resultModal(minutes, result) {
+    openModal(`
+      <div class="celebrate">
+        <div class="big-icon">⏹</div>
+        <h2>${minutes}分、切り上げた。</h2>
+        <p class="sub">ここまでの学習時間を記録しました。</p>
+        <div class="reward-line">
+          <div><strong>+${result.xpGain}</strong><small>XP</small></div>
+          <div><strong>+${result.goldGain}</strong><small>金貨</small></div>
+          <div><strong>x${comboMult().toFixed(1)}</strong><small>コンボ</small></div>
+          <div><strong>${state.stats.streak}日</strong><small>連続</small></div>
+        </div>
+        ${rpgHitLine(result.rpgHit)}
+        <div class="modal-actions center" style="justify-content:center">
+          <button class="btn" data-action="continue-after-session">☕ ${state.settings.breakMin}分休憩する</button>
+          <button class="btn primary" data-action="continue-focus">▶ 続けて集中する</button>
+          <button class="btn ghost" data-action="close-modal">閉じる</button>
+        </div>
+      </div>
+    `);
   }
 
   /* ---------------- quests ---------------- */
@@ -900,6 +937,15 @@
     if (hit.bonus) return ` / ${hit.name} 超過ボーナス +${hit.bonusXp} XP`;
     return ` / ${hit.name}に${hit.dmg}ダメージ${hit.defeated ? '（討伐）' : ''}`;
   }
+  function rpgHitLine(hit) {
+    if (!hit) return '';
+    const icon = hit.kind === 'boss' ? '👹' : '🗡';
+    if (hit.bonus) {
+      return `<div class="rpg-hit-line">${icon} <strong>${esc(hit.name)}</strong> はノルマ達成済み。超過ボーナス +${hit.bonusXp} XP / +${hit.bonusGold} 金貨</div>`;
+    }
+    const defeat = hit.defeated ? `<br><span class="rpg-defeat-line">討伐！ +${hit.xp} XP / +${hit.gold} 金貨</span>` : '';
+    return `<div class="rpg-hit-line">${icon} <strong>${esc(hit.name)}</strong> に <strong>${hit.dmg}</strong> ダメージ${defeat}</div>`;
+  }
   function bossCalendarHtml(boss, schedule) {
     if (!schedule) return '';
     const today = schedule.today;
@@ -1020,9 +1066,6 @@
     return `
       <section class="home-timer-hero" id="home-timer-hero">
         <div class="focus-stage">${timerStageHtml()}</div>
-        <button class="scroll-hint" data-action="scroll-home" aria-label="下のホーム画面へスクロール">
-          <span>いつものホームは下へ</span><span class="scroll-arrow">▼</span>
-        </button>
       </section>
 
       <div id="home-classic">
@@ -1202,23 +1245,10 @@
     const rewardXp = Math.round(f.minutes * 2 * comboMult() * (state.stats.boost ? 2 : 1));
     const rewardGold = Math.round(f.minutes * 1.2 * comboMult());
     return `
-          <div class="focus-step">
-            <label for="intent-input">このセッションでやること</label>
-            <input class="intent-input" id="intent-input" placeholder="例：英文法 第3章を1周する" value="${esc(f.intent)}" data-action="intent" />
-          </div>
-
           <div class="mode-tabs">
             <button class="mode-tab ${f.mode === 'focus' ? 'active' : ''}" data-action="mode" data-mode="focus">集中 ${state.settings.focusMin}分</button>
             <button class="mode-tab ${f.mode === 'short' ? 'active' : ''}" data-action="mode" data-mode="short">休憩 ${state.settings.breakMin}分</button>
             <button class="mode-tab ${f.mode === 'long' ? 'active' : ''}" data-action="mode" data-mode="long">長休憩 ${state.settings.longBreakMin}分</button>
-          </div>
-
-          <div class="timer-minutes-field ${f.running ? 'disabled' : ''}">
-            <label for="timer-minutes">長さを手入力（分）</label>
-            <div class="timer-minutes-row">
-              <input id="timer-minutes" type="number" min="${MINUTE_LIMITS[f.mode][0]}" max="${MINUTE_LIMITS[f.mode][1]}" step="1" inputmode="numeric" value="${f.minutes}" ${f.running ? 'disabled' : ''} />
-              <span>分</span>
-            </div>
           </div>
 
           <div class="timer-ring" id="timer-ring" style="--timer-c:${color}">
@@ -1233,7 +1263,7 @@
 
           <div class="timer-controls">
             ${f.running
-              ? `<button class="btn" data-action="pause">⏸ 一時停止</button><button class="btn ghost" data-action="give-up">諦める</button>`
+              ? `<button class="btn" data-action="pause">⏸ 一時停止</button><button class="btn ghost" data-action="end-session">⏹ 終了</button>`
               : `<button class="btn primary" data-action="start-timer">${f.remaining < f.minutes * 60 ? '▶ 再開する' : '▶ 集中を開始'}</button><button class="btn ghost" data-action="reset-timer">リセット</button>`}
           </div>
 
@@ -2023,7 +2053,6 @@
       case 'nav': go(el.dataset.view); break;
       case 'quick-start': startFocusInHome(); break;
       case 'start-focus': startFocusInHome(); break;
-      case 'scroll-home': $('#home-classic')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); break;
       case 'scroll-timer': $('#home-timer-hero')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); break;
       case 'rpg-new-boss': bossModal(); break;
       case 'rpg-create-boss': {
@@ -2077,11 +2106,7 @@
       case 'start-timer': startTimer(); break;
       case 'pause': pauseTimer(); break;
       case 'reset-timer': resetTimer(); renderAll(); toast('タイマーをリセットした'); break;
-      case 'give-up':
-        openModal(`<h2>本当に諦める？</h2><div class="sub">コンボが途切れ、規律と執着が削れる。</div>
-          <div class="modal-actions"><button class="btn ghost" data-action="close-modal">まだやる</button><button class="btn primary" data-action="confirm-give-up">諦める</button></div>`);
-        break;
-      case 'confirm-give-up': closeModal(); giveUp(); renderAll(); break;
+      case 'end-session': endSessionEarly(); break;
       case 'mode': setMode(el.dataset.mode); break;
       case 'continue-after-session': closeModal(); startFocusInHome('short'); break;
       case 'continue-focus': closeModal(); startFocusInHome('focus'); break;
@@ -2171,25 +2196,7 @@
     ta.remove();
   }
 
-  document.addEventListener('input', (e) => {
-    if (e.target.id === 'intent-input') { state.focus.intent = e.target.value; save(); }
-    if (e.target.id === 'timer-minutes') {
-      if (state.focus.running) return;
-      const mode = state.focus.mode;
-      const m = safeMinutes(e.target.value, mode, modeMinutes(mode));
-      state.focus.minutes = m;
-      state.focus.remaining = m * 60;
-      state.settings[mode === 'focus' ? 'focusMin' : mode === 'short' ? 'breakMin' : 'longBreakMin'] = m;
-      save();
-      updateTimerDom();
-      const tab = $(`.mode-tab[data-mode="${mode}"]`);
-      if (tab) tab.textContent = `${mode === 'focus' ? '集中' : mode === 'short' ? '休憩' : '長休憩'} ${m}分`;
-      const heroCta = $('.hero-cta');
-      if (heroCta && mode === 'focus') heroCta.textContent = `▶ ${m}分 集中する`;
-    }
-  });
   document.addEventListener('change', (e) => {
-    if (e.target.id === 'timer-minutes') { e.target.value = state.focus.minutes; return; }
     if (e.target.id === 'boss-days' || e.target.id === 'boss-quota') {
       const d = Number($('#boss-days')?.value) || 7;
       const q = Number($('#boss-quota')?.value) || 2;
