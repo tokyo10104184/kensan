@@ -9,7 +9,7 @@
 
   /* ---------------- constants ---------------- */
   const KEY = 'kensan_state_v1';
-  const BUILD_VERSION = '2026.11.28f';
+  const BUILD_VERSION = '2026.11.28g';
   const AVATARS = ['🔥', '🥷', '🦊', '🐺', '🦅', '🦉', '🧠', '⚔️', '🌙', '🐉', '🧘', '🚀'];
   const TITLES = [
     { lv: 1,  name: '見習い',   en: 'APPRENTICE' },
@@ -156,6 +156,7 @@
         totalMinutes: 0, totalSessions: 0, tasksDone: 0,
         streak: 0, longestStreak: 0, lastStudyDate: null,
         combo: 0, bestCombo: 0, comboDate: null,
+        focusCompleted: false,
         shields: 0, boost: false, tickets: 0, tomes: 0,
         lastActiveDate: null,
       },
@@ -495,6 +496,7 @@
       return;
     }
 
+    state.stats.focusCompleted = true;
     const result = awardFocusSession(minutes);
     save();
     chime();
@@ -528,6 +530,14 @@
       boostDriver('motivation', 1);
       sfx('success');
       phasePopup('☕', '休憩を終了', '次の集中へ戻ります');
+      save(); renderAll();
+      return;
+    }
+
+    // 初回の集中を完遂するまでは、途中終了でもリザルトも報酬も出さない。
+    if (!state.stats.focusCompleted) {
+      sfx('reset');
+      toast('まずは集中を1回、最後までやり切ろう。リザルトはそのあと解放されます。');
       save(); renderAll();
       return;
     }

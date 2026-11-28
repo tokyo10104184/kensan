@@ -549,7 +549,8 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   position: relative; padding: 6px 0 52px; margin-bottom: 22px;
 }
 .home-timer-hero .focus-stage {
-  width: 100%; max-width: 760px; padding: 30px 28px 26px;
+  width: 100%; max-width: 760px; min-height: 540px;
+  padding: 52px 28px 46px; justify-content: center;
   background: linear-gradient(160deg, rgba(255,106,77,.07), rgba(181,107,255,.05)), var(--panel);
 }
 .home-timer-hero .mode-tabs { margin-bottom: 22px; }
@@ -850,7 +851,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   .view-container { padding: 18px 16px 100px; }
   .home-hero { flex-direction: column; align-items: flex-start; padding: 20px; }
   .home-timer-hero { min-height: calc(100vh - 186px); padding-bottom: 46px; margin-bottom: 18px; }
-  .home-timer-hero .focus-stage { padding: 18px 16px 20px; border-radius: 20px; }
+  .home-timer-hero .focus-stage { min-height: 470px; padding: 36px 16px 34px; border-radius: 20px; }
   .home-timer-hero .mode-tabs { margin-bottom: 14px; flex-wrap: wrap; justify-content: center; }
   .home-timer-hero .mode-tab { padding: 7px 10px; font-size: 11px; }
   .home-timer-hero .timer-ring { width: min(250px, 66vw, 34vh); height: min(250px, 66vw, 34vh); }
@@ -918,7 +919,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 
 @media (min-width: 821px) and (max-height: 820px) {
   .home-timer-hero { padding-bottom: 38px; }
-  .home-timer-hero .focus-stage { padding: 20px 24px 18px; }
+  .home-timer-hero .focus-stage { min-height: 440px; padding: 32px 24px 28px; }
   .home-timer-hero .mode-tabs { margin-bottom: 12px; }
   .home-timer-hero .timer-combo { margin-top: 8px; }
   .home-timer-hero .focus-reward-inline { margin-top: 8px; }
@@ -955,7 +956,7 @@ body.focus-mode .home-timer-hero::before {
 body.focus-mode[data-phase="short"] .home-timer-hero::before { content: '休憩フェーズ'; }
 body.focus-mode[data-phase="long"] .home-timer-hero::before { content: '長休憩フェーズ'; }
 body.focus-mode .home-timer-hero .focus-stage {
-  width: 100%; max-width: 760px; padding: 0;
+  width: 100%; max-width: 760px; min-height: 0; padding: 0;
   border: none; background: transparent; box-shadow: none;
 }
 body.focus-mode .home-timer-hero .mode-tabs,
