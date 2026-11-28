@@ -695,6 +695,35 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .rpg-hp i { display: block; height: 100%; border-radius: 9px; background: linear-gradient(90deg, var(--motivation), var(--obsession)); transition: width .5s cubic-bezier(.22,1,.36,1); }
 .rpg-hp span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-shadow: 0 1px 2px rgba(0,0,0,.6); font-variant-numeric: tabular-nums; }
 .rpg-boss-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+.boss-quota-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; font-size: 11px; color: var(--muted); }
+.boss-quota-line strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.boss-debt { color: var(--motivation); font-weight: 800; }
+.boss-over { color: var(--ego); font-weight: 800; }
+.boss-quota-hint { margin-left: auto; color: var(--dim); font-size: 10px; }
+.boss-calendar-block { margin-top: 12px; }
+.boss-calendar-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 10px; color: var(--muted); }
+.boss-calendar-head span:first-child { font-weight: 800; letter-spacing: .12em; }
+.boss-calendar { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; scrollbar-width: thin; scroll-snap-type: x proximity; }
+.boss-calendar::-webkit-scrollbar { height: 4px; }
+.boss-calendar::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+.boss-day { flex: 0 0 48px; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px 2px; border-radius: 10px; scroll-snap-align: center; }
+.boss-day.future { opacity: .55; }
+.boss-day.today { background: rgba(255,201,74,.07); box-shadow: inset 0 0 0 1px rgba(255,201,74,.22); }
+.boss-day-ring { --ring: rgba(255,255,255,.18); position: relative; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--ring) calc(var(--p, 0) * 1%), rgba(255,255,255,.07) 0); }
+.boss-day-ring::before { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--bg-2); }
+.boss-day-ring span { position: relative; z-index: 1; font-size: 8px; color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.boss-day.missed .boss-day-ring { --ring: var(--motivation); }
+.boss-day.done .boss-day-ring { --ring: var(--discipline); }
+.boss-day.over .boss-day-ring { --ring: var(--ego); }
+.boss-day.today:not(.done):not(.over) .boss-day-ring { --ring: var(--obsession); }
+.boss-day.done .boss-day-ring span, .boss-day.over .boss-day-ring span { color: var(--text); }
+.boss-day.today .boss-day-ring { box-shadow: 0 0 0 2px rgba(255,201,74,.3); }
+.boss-day-bar { width: 36px; height: 3px; border-radius: 3px; background: rgba(255,255,255,.07); overflow: hidden; }
+.boss-day-bar i { display: block; height: 100%; border-radius: 3px; background: var(--ego); }
+.boss-day small { font-size: 9px; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.boss-day small em { color: var(--ego); font-style: normal; font-weight: 800; }
+.boss-day.missed small { color: var(--motivation); }
+.boss-day.done small { color: var(--discipline); }
 .rpg-reward { font-size: 11px; color: var(--muted); }
 .rpg-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .rpg-actions.center { justify-content: center; }
@@ -733,6 +762,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .rpg-log-row strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rpg-log-row small { color: var(--dim); font-size: 9px; }
 .rpg-dmg { color: var(--motivation); font-weight: 800; font-variant-numeric: tabular-nums; }
+.rpg-dmg.bonus { color: var(--ego); }
 .rpg-rules h3 { margin: 0 0 10px; font-size: 13px; }
 .rpg-rules ul { margin: 0; padding-left: 16px; }
 .rpg-rules li { font-size: 11px; color: var(--muted); line-height: 1.8; }

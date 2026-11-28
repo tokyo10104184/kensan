@@ -18,6 +18,10 @@
     { lv: 12, name: '賢者',     en: 'SAGE' },
     { lv: 17, name: '伝説',     en: 'LEGEND' },
   ];
+  // ボス戦は「1セッション = 固定ダメージ」。1日のノルマを超えた分はHPを削らずボーナスになる。
+  const BOSS_DAMAGE_PER_SESSION = 10;
+  const BOSS_BONUS_XP = 20;
+  const BOSS_BONUS_GOLD = 15;
   const DRIVERS = [
     { key: 'motivation', name: '意欲',   en: 'MOTIVATION', icon: '🔥', color: 'var(--motivation)', desc: '「なぜ」を思い出すほど、動き出す力が強まる。' },
     { key: 'discipline', name: '規律',   en: 'DISCIPLINE', icon: '🧊', color: 'var(--discipline)', desc: '途切れさせない仕組み。習慣が意志を代行する。' },
@@ -179,6 +183,7 @@
   let state = load();
   let modalOptions = { closable: true };
   let lastTickSave = 0;
+  let bossCalScrolledFor = null;
 
   function load() {
     try {
@@ -409,9 +414,9 @@
     checkQuests();
     save();
     chime();
-    notify('研鑽 — セッション完了', `+${xpGain} XP  /  +${goldGain} 金貨  /  コンボ x${comboMult().toFixed(1)}${rpgHit ? `  /  ${rpgHit.name}に${rpgHit.dmg}ダメージ${rpgHit.defeated ? '（討伐）' : ''}` : ''}`);
+    notify('研鑽 — セッション完了', `+${xpGain} XP  /  +${goldGain} 金貨  /  コンボ x${comboMult().toFixed(1)}${rpgHitText(rpgHit)}`);
     particles('🔥', 14);
-    if (rpgHit) particles(rpgHit.defeated ? '🏆' : '⚔', rpgHit.defeated ? 16 : 8);
+    if (rpgHit) particles(rpgHit.defeated ? '🏆' : rpgHit.bonus ? '⚡' : '⚔', rpgHit.defeated ? 16 : 8);
     renderAll();
 
     openModal(`
@@ -425,7 +430,7 @@
           <div><strong>x${comboMult().toFixed(1)}</strong><small>コンボ</small></div>
           <div><strong>${s.streak}日</strong><small>連続</small></div>
         </div>
-        ${rpgHit ? `<div class="rpg-hit-line">${rpgHit.kind === 'boss' ? '👹' : '🗡'} <strong>${esc(rpgHit.name)}</strong> に <strong>${rpgHit.dmg}</strong> ダメージ${rpgHit.defeated ? `<br><span class="rpg-defeat-line">討伐！ +${rpgHit.xp} XP / +${rpgHit.gold} 金貨</span>` : ''}</div>` : ''}
+        ${rpgHitHtml(rpgHit)}
         <p class="muted" style="font-size:12px">${nextTitle() ? `次の称号「${nextTitle().name}」まであと ${nextTitle().lv - levelInfo().level} レベル。` : 'すでに伝説。その名は語り継がれる。'}</p>
         <div class="modal-actions center" style="justify-content:center">
           <button class="btn" data-action="continue-after-session">☕ ${state.settings.breakMin}分休憩する</button>
@@ -601,7 +606,9 @@
     return def;
   }
   function bossRewards(boss) {
-    return { xp: Math.round(boss.maxHp * 0.5), gold: Math.round(boss.maxHp * 0.3) };
+    ensureBossFields(boss);
+    const requiredSessions = (boss.dailyQuota || 2) * (boss.days || 1);
+    return { xp: requiredSessions * 15, gold: requiredSessions * 10 };
   }
   function activeRpgTarget() {
     const rpg = state.rpg;
@@ -613,84 +620,249 @@
     if (bossActive) return { kind: 'boss', boss };
     return null;
   }
-  // 試験日を過ぎたボスは敗北扱いにする。
+  // 旧仕様（HP=日数×60、時間ダメージ）のボスを、ノルマ制へ引き継ぐ。
+  // 新規ボスは作成時から dailyQuota / startDate / daysLog を持つ。
+  function ensureBossFields(boss) {
+    if (!boss) return boss;
+    if (boss.dailyQuota && boss.startDate && boss.daysLog) return boss;
+    const days = clamp(Math.round(Number(boss.days) || 1), 1, 21);
+    const base = 2;
+    const start = boss.startDate || boss.createdAt || todayKey();
+    const oldMax = Math.max(1, Number(boss.maxHp) || days * 60);
+    const hpNum = Number(boss.hp);
+    const oldHp = Number.isFinite(hpNum) ? clamp(hpNum, 0, oldMax) : oldMax;
+    const ratio = clamp(oldHp / oldMax, 0, 1);
+    const newMax = base * days * BOSS_DAMAGE_PER_SESSION;
+    const dealt = Math.round((1 - ratio) * base * days);
+    const log = {};
+    let remaining = dealt;
+    for (let i = 0; i < days && remaining > 0; i++) {
+      const date = keyFromDay(dayNum(start) + i);
+      if (dayNum(date) > dayNum(todayKey())) break;
+      const fill = Math.min(base, remaining);
+      log[date] = { sessions: fill, bonus: 0 };
+      remaining -= fill;
+    }
+    boss.dailyQuota = base;
+    boss.startDate = start;
+    boss.days = days;
+    boss.daysLog = log;
+    boss.maxHp = newMax;
+    boss.hp = Math.max(0, newMax - dealt * BOSS_DAMAGE_PER_SESSION);
+    boss.bonusXp = boss.bonusXp || 0;
+    boss.bonusGold = boss.bonusGold || 0;
+    return boss;
+  }
+  // 日ごとのノルマと、未達分の繰越を計算する。
+  // 過去/今日は実績、未来日は基本ノルマを表示する。
+  function bossSchedule(boss) {
+    if (!boss) return null;
+    ensureBossFields(boss);
+    const base = boss.dailyQuota || 2;
+    const start = boss.startDate || boss.createdAt || todayKey();
+    const today = todayKey();
+    let debt = 0;
+    const days = [];
+    for (let i = 0; i < boss.days; i++) {
+      const date = keyFromDay(dayNum(start) + i);
+      const record = (boss.daysLog && boss.daysLog[date]) || { sessions: 0, bonus: 0 };
+      const isToday = date === today;
+      const isPast = dayNum(date) < dayNum(today);
+      const isFuture = dayNum(date) > dayNum(today);
+      const quota = isFuture ? base : base + debt;
+      const sessions = Number(record.sessions) || 0;
+      const completed = sessions >= quota;
+      const over = Math.max(0, sessions - quota);
+      const pct = quota > 0 ? Math.min(100, (sessions / quota) * 100) : 0;
+      days.push({
+        date, quota, sessions, completed, over, pct,
+        isToday, isPast, isFuture, bonus: Number(record.bonus) || 0,
+      });
+      if (!isFuture) debt = completed ? 0 : quota - sessions;
+    }
+    const todayEntry = days.find((d) => d.isToday) || null;
+    return {
+      days, debt, today: todayEntry, base,
+      todayCarry: todayEntry ? Math.max(0, todayEntry.quota - base) : 0,
+    };
+  }
+  // ボスの準備期間は今日から試験前日まで。試験日を迎えたら敗北。
   function checkRpgDay() {
     const boss = state.rpg && state.rpg.boss;
     if (!boss || boss.defeated || boss.failed) return;
-    if (daysUntil(boss.examDate) < 0) {
+    ensureBossFields(boss);
+    if (dayNum(todayKey()) >= dayNum(boss.examDate)) {
       boss.failed = true;
       state.rpg.target = 'monster';
     }
   }
-  // 集中時間をそのままダメージに変換する。
-  function dealRpgDamage(minutes) {
-    checkRpgDay();
-    const target = activeRpgTarget();
-    if (!target) return null;
-    const dmg = Math.max(1, Math.round(minutes * comboMult()));
-    const rpg = state.rpg;
+  // 1セッション = 1回の攻撃。ノルマ内はHPを削り、超過分はボーナス。
+  function dealBossSession(boss) {
+    ensureBossFields(boss);
+    const schedule = bossSchedule(boss);
+    const today = schedule && schedule.today;
+    if (!today) return null;
+    if (!boss.daysLog) boss.daysLog = {};
+    const record = boss.daysLog[today.date] || (boss.daysLog[today.date] = { sessions: 0, bonus: 0 });
+    const before = Number(record.sessions) || 0;
+    record.sessions = before + 1;
+    const quota = today.quota;
     let result;
-    if (target.kind === 'boss') {
-      const boss = target.boss;
-      boss.hp = Math.max(0, boss.hp - dmg);
-      result = { kind: 'boss', name: boss.name, dmg, defeated: false };
+    if (before < quota) {
+      boss.hp = Math.max(0, boss.hp - BOSS_DAMAGE_PER_SESSION);
+      result = {
+        kind: 'boss', name: boss.name, dmg: BOSS_DAMAGE_PER_SESSION,
+        defeated: false, bonus: false, quota, sessions: record.sessions,
+      };
       if (boss.hp === 0) {
         boss.defeated = true;
         const rw = bossRewards(boss);
         state.stats.xp += rw.xp;
         state.stats.gold += rw.gold;
-        rpg.bossesDefeated = (rpg.bossesDefeated || 0) + 1;
+        state.rpg.bossesDefeated = (state.rpg.bossesDefeated || 0) + 1;
         boostDriver('ego', 8);
         boostDriver('discipline', 5);
         boostDriver('motivation', 3);
         boostDriver('obsession', 4);
-        rpg.target = 'monster';
+        state.rpg.target = 'monster';
         result.defeated = true;
         result.xp = rw.xp;
         result.gold = rw.gold;
       }
     } else {
-      const def = target.def;
-      const ms = monsterState(def.id);
-      ms.hp = Math.max(0, ms.hp - dmg);
-      result = { kind: 'monster', name: def.name, dmg, defeated: false };
-      if (ms.hp === 0) {
-        ms.defeated = true;
-        const rw = monsterReward(def);
-        state.stats.xp += rw.xp;
-        state.stats.gold += rw.gold;
-        boostDriver('ego', 3);
-        boostDriver('obsession', 2);
-        result.defeated = true;
-        result.xp = rw.xp;
-        result.gold = rw.gold;
-        const idx = MONSTERS.findIndex((m) => m.id === def.id);
-        const next = MONSTERS.find((m, i) => i > idx && isMonsterUnlocked(i) && !monsterState(m.id).defeated);
-        if (next) rpg.activeMonster = next.id;
-      }
+      state.stats.xp += BOSS_BONUS_XP;
+      state.stats.gold += BOSS_BONUS_GOLD;
+      boss.bonusXp = (boss.bonusXp || 0) + BOSS_BONUS_XP;
+      boss.bonusGold = (boss.bonusGold || 0) + BOSS_BONUS_GOLD;
+      record.bonus = (Number(record.bonus) || 0) + 1;
+      result = {
+        kind: 'boss', name: boss.name, dmg: 0, defeated: false, bonus: true,
+        bonusXp: BOSS_BONUS_XP, bonusGold: BOSS_BONUS_GOLD,
+        quota, sessions: record.sessions, over: Math.max(0, record.sessions - quota),
+      };
+    }
+    state.rpg.log = state.rpg.log || [];
+    state.rpg.log.unshift({
+      t: Date.now(), dmg: result.dmg, name: result.name, kind: 'boss',
+      defeated: result.defeated, bonus: result.bonus,
+    });
+    state.rpg.log = state.rpg.log.slice(0, 20);
+    return result;
+  }
+  // 魔物は集中時間 × コンボ、ボスはセッション数で戦う。
+  function dealRpgDamage(minutes) {
+    checkRpgDay();
+    const target = activeRpgTarget();
+    if (!target) return null;
+    if (target.kind === 'boss') return dealBossSession(target.boss);
+    const dmg = Math.max(1, Math.round(minutes * comboMult()));
+    const rpg = state.rpg;
+    const def = target.def;
+    const ms = monsterState(def.id);
+    ms.hp = Math.max(0, ms.hp - dmg);
+    const result = { kind: 'monster', name: def.name, dmg, defeated: false };
+    if (ms.hp === 0) {
+      ms.defeated = true;
+      const rw = monsterReward(def);
+      state.stats.xp += rw.xp;
+      state.stats.gold += rw.gold;
+      boostDriver('ego', 3);
+      boostDriver('obsession', 2);
+      result.defeated = true;
+      result.xp = rw.xp;
+      result.gold = rw.gold;
+      const idx = MONSTERS.findIndex((m) => m.id === def.id);
+      const next = MONSTERS.find((m, i) => i > idx && isMonsterUnlocked(i) && !monsterState(m.id).defeated);
+      if (next) rpg.activeMonster = next.id;
     }
     rpg.log = rpg.log || [];
     rpg.log.unshift({ t: Date.now(), dmg, name: result.name, kind: result.kind, defeated: result.defeated });
     rpg.log = rpg.log.slice(0, 20);
     return result;
   }
-  function createBoss(name, subject, days) {
+  function createBoss(name, subject, days, quota) {
     const d = clamp(Math.round(Number(days) || 7), 1, 21);
-    const maxHp = d * 60;
+    const q = clamp(Math.round(Number(quota) || 2), 1, 4);
+    const maxHp = d * q * BOSS_DAMAGE_PER_SESSION;
     state.rpg.boss = {
       id: uid(),
       name: name || '定期試験',
       subject: subject || '試験',
       days: d,
+      dailyQuota: q,
+      startDate: todayKey(),
       examDate: keyFromDay(dayNum(todayKey()) + d),
       maxHp,
       hp: maxHp,
       createdAt: todayKey(),
       defeated: false,
       failed: false,
+      daysLog: {},
+      bonusXp: 0,
+      bonusGold: 0,
     };
     state.rpg.target = 'boss';
     save();
+  }
+  function rpgHitHtml(hit) {
+    if (!hit) return '';
+    const icon = hit.kind === 'boss' ? '👹' : '🗡';
+    if (hit.bonus) {
+      return `<div class="rpg-hit-line">${icon} <strong>${esc(hit.name)}</strong> は今日のノルマ達成済み。<br><span class="rpg-defeat-line">超過ボーナス +${hit.bonusXp} XP / +${hit.bonusGold} 金貨（超過 +${hit.over}）</span></div>`;
+    }
+    const quota = hit.kind === 'boss' ? `（今日のノルマ ${hit.sessions}/${hit.quota}）` : '';
+    const defeat = hit.defeated ? `<br><span class="rpg-defeat-line">討伐！ +${hit.xp} XP / +${hit.gold} 金貨</span>` : '';
+    return `<div class="rpg-hit-line">${icon} <strong>${esc(hit.name)}</strong> に <strong>${hit.dmg}</strong> ダメージ${quota}${defeat}</div>`;
+  }
+  function rpgHitText(hit) {
+    if (!hit) return '';
+    if (hit.bonus) return ` / ${hit.name} 超過ボーナス +${hit.bonusXp} XP`;
+    return ` / ${hit.name}に${hit.dmg}ダメージ${hit.defeated ? '（討伐）' : ''}`;
+  }
+  function bossCalendarHtml(boss, schedule) {
+    if (!schedule) return '';
+    const today = schedule.today;
+    const headRight = boss.defeated
+      ? '全ノルマ達成'
+      : boss.failed
+        ? '試験日を迎えた'
+        : today
+          ? `今日 ${today.sessions}/${today.quota}${schedule.todayCarry ? ` ・ 繰越 +${schedule.todayCarry}` : ''}`
+          : '期間終了';
+    const cells = schedule.days.map((d) => {
+      const dt = new Date(d.date + 'T00:00:00');
+      const label = `${dt.getMonth() + 1}/${dt.getDate()}`;
+      const cls = [
+        d.isToday ? 'today' : '',
+        d.isFuture ? 'future' : '',
+        d.isPast && !d.completed ? 'missed' : '',
+        d.completed && !d.over ? 'done' : '',
+        d.over ? 'over' : '',
+      ].filter(Boolean).join(' ');
+      const overPct = d.quota ? Math.min(100, (d.over / d.quota) * 100) : 0;
+      return `<div class="boss-day ${cls}" title="${label} ${d.sessions}/${d.quota}${d.over ? ` 超過+${d.over}` : ''}">
+        <div class="boss-day-ring" style="--p:${d.pct.toFixed(1)}"><span>${label}</span></div>
+        <div class="boss-day-bar">${d.over ? `<i style="width:${overPct.toFixed(1)}%"></i>` : ''}</div>
+        <small>${d.sessions}/${d.quota}${d.over ? ` <em>+${d.over}</em>` : ''}</small>
+      </div>`;
+    }).join('');
+    return `<div class="boss-calendar-block">
+      <div class="boss-calendar-head"><span>ノルマ消化</span><span class="dim">${headRight}</span></div>
+      <div class="boss-calendar" id="boss-calendar">${cells}</div>
+    </div>`;
+  }
+  // 長いボス期間でも、今日のマスが見える位置からカレンダーを開く。
+  function scrollBossCalendarToToday() {
+    const cal = $('#boss-calendar');
+    if (!cal) return;
+    const boss = state.rpg && state.rpg.boss;
+    const key = `${boss ? boss.id : 'none'}:${todayKey()}`;
+    if (bossCalScrolledFor === key) return;
+    const today = cal.querySelector('.boss-day.today');
+    if (!today) return;
+    const target = today.offsetLeft - cal.clientWidth / 2 + today.offsetWidth / 2;
+    cal.scrollLeft = Math.max(0, target);
+    bossCalScrolledFor = key;
   }
 
   /* ============================================================
@@ -735,6 +907,7 @@
     const renders = { home: viewHome, quests: viewQuests, rpg: viewRpg, rivals: viewRivals, shop: viewShop };
     view.innerHTML = `<div class="view">${(renders[state.view] || viewHome)()}</div>`;
     if ($('#timer-ring')) updateTimerDom();
+    if ($('#boss-calendar')) scrollBossCalendarToToday();
   }
   function go(view) {
     checkRpgDay();
@@ -1003,6 +1176,8 @@
     const bossPct = boss ? Math.max(0, Math.round((boss.hp / boss.maxHp) * 100)) : 0;
     const monsterPct = def && ms ? Math.max(0, Math.round((ms.hp / monsterMaxHp(def)) * 100)) : 0;
     const bossRw = boss ? bossRewards(boss) : null;
+    const bossPlan = boss ? bossSchedule(boss) : null;
+    const todayBoss = bossPlan && bossPlan.today;
     const examDateLabel = boss
       ? (() => { const d = new Date(boss.examDate + 'T00:00:00'); return `${d.getMonth() + 1}/${d.getDate()} (${'日月火水木金土'[d.getDay()]})`; })()
       : '';
@@ -1025,6 +1200,17 @@
           </div>
         </div>
         ${bossActive ? `<div class="rpg-hp"><i style="width:${bossPct}%"></i><span>${boss.hp} / ${boss.maxHp}</span></div>` : ''}
+        ${bossActive && todayBoss ? `<div class="boss-quota-line">
+          <span>今日のノルマ <strong>${todayBoss.sessions} / ${todayBoss.quota}</strong> セッション</span>
+          ${bossPlan.todayCarry ? `<span class="boss-debt">繰越 +${bossPlan.todayCarry}</span>` : ''}
+          ${todayBoss.over ? `<span class="boss-over">超過 +${todayBoss.over}</span>` : ''}
+          <span class="boss-quota-hint">${todayBoss.sessions < todayBoss.quota ? `あと ${todayBoss.quota - todayBoss.sessions} セッション` : '超過分はボーナス'}</span>
+        </div>` : ''}
+        ${!bossActive ? `<div class="boss-quota-line">
+          <span>${boss.defeated ? '全ノルマ達成' : '未達のまま試験日を迎えた'}</span>
+          <span class="boss-quota-hint">${boss.defeated ? '討伐済み' : '敗北'}</span>
+        </div>` : ''}
+        ${bossCalendarHtml(boss, bossPlan)}
         <div class="rpg-boss-foot">
           <span class="rpg-reward">${boss.defeated ? `獲得済み +${bossRw.xp} XP / +${bossRw.gold} ◈` : boss.failed ? '報酬なし' : `討伐報酬 +${bossRw.xp} XP / +${bossRw.gold} ◈`}</span>
           <div class="rpg-actions">
@@ -1038,7 +1224,7 @@
         <div>
           <div class="rpg-kicker">BOSS BATTLE</div>
           <h3>定期試験を、ボス戦に。</h3>
-          <p>試験日の3週間前から挑戦できます。残り日数×60分のHPを削り切れば討伐。集中時間がそのままダメージになります。</p>
+          <p>試験日の3週間前から挑戦できます。1日のノルマを決め、試験前日まで毎日削る。未達分は翌日へ繰り越し、ノルマを超えた分はボーナスになります。</p>
         </div>
         <button class="btn primary" data-action="rpg-new-boss">＋ ボスを立てる</button>
       </div>`;
@@ -1083,14 +1269,15 @@
     const logHtml = log.length ? log.slice(0, 8).map((e) => {
       const d = new Date(e.t);
       const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-      return `<div class="rpg-log-row"><span>${e.kind === 'boss' ? '👹' : '🗡'}</span><strong>${esc(e.name)}</strong><span class="rpg-dmg">-${e.dmg}</span><small>${time}</small></div>`;
+      return `<div class="rpg-log-row"><span>${e.kind === 'boss' ? '👹' : '🗡'}</span><strong>${esc(e.name)}</strong><span class="rpg-dmg ${e.bonus ? 'bonus' : ''}">${e.bonus ? '超過' : `-${e.dmg}`}</span><small>${time}</small></div>`;
     }).join('') : `<div class="empty small"><span class="emoji">🗡</span><p>まだ攻撃していない。<br>集中して最初の一撃を。</p></div>`;
 
     return `
       <div class="page-head">
         <div><h1>冒険</h1><p class="muted">勉強時間が、そのまま刃になる。</p></div>
         <div class="summary-chips">
-          <span class="chip">🗡 1分 = 1ダメージ × コンボ</span>
+          <span class="chip">🗡 魔物: 1分 = 1ダメージ × コンボ</span>
+          <span class="chip">👹 ボス: 1セッション = 10ダメージ</span>
           <span class="chip">周回 ${rpg.cycle + 1}</span>
           <span class="chip">👹 ボス討伐 ${rpg.bossesDefeated || 0}</span>
         </div>
@@ -1110,10 +1297,12 @@
           <div class="card rpg-rules">
             <h3>戦い方</h3>
             <ul>
-              <li>集中セッションの<span>1分 = 1ダメージ</span></li>
-              <li>コンボ倍率がそのままダメージ倍率</li>
-              <li>ボスHP = <span>残り日数 × 60分</span></li>
-              <li>試験日を過ぎると敗北</li>
+              <li>魔物は<span>集中1分 = 1ダメージ × コンボ</span></li>
+              <li>ボスは<span>1セッション = 10ダメージ</span></li>
+              <li>ボスHP = <span>1日のノルマ × 日数 × 10</span></li>
+              <li>ノルマ未達分は<span>翌日へ繰越</span></li>
+              <li>ノルマ超過分は<span>XP・金貨ボーナス</span></li>
+              <li>試験日を迎えると敗北</li>
               <li>ボスは試験の3週間前から設定可能</li>
             </ul>
           </div>
@@ -1591,14 +1780,18 @@
     const options = Array.from({ length: 21 }, (_, i) => i + 1)
       .map((d) => `<option value="${d}" ${d === 7 ? 'selected' : ''}>${d}日後（今は${periodLabel(d)}）</option>`)
       .join('');
-    const preview = (d) => `HP ${d * 60} ・ 討伐報酬 +${Math.round(d * 60 * 0.5)} XP / +${Math.round(d * 60 * 0.3)} 金貨`;
+    const quotaOptions = [1, 2, 3, 4]
+      .map((q) => `<option value="${q}" ${q === 2 ? 'selected' : ''}>${q} セッション / 日${q === 2 ? '（標準）' : q === 1 ? '（軽め）' : q === 4 ? '（重め）' : ''}</option>`)
+      .join('');
+    const preview = (d, q) => `HP ${d * q * BOSS_DAMAGE_PER_SESSION} ・ 1日 ${q} セッション × ${d}日（合計 ${d * q} セッション）<br>1セッション = ${BOSS_DAMAGE_PER_SESSION}ダメージ ・ 討伐報酬 +${d * q * 15} XP / +${d * q * 10} 金貨`;
     openModal(`
       <h2>👹 定期試験をボス戦に</h2>
-      <div class="sub">試験日の3週間前まで設定できます。集中時間がそのままダメージになり、試験日を過ぎると敗北します。</div>
+      <div class="sub">試験日の3週間前まで設定できます。1日のノルマを超えた分はボーナス、未達分は翌日へ繰り越されます。</div>
       <div class="field"><label>ボス名</label><input id="boss-name" maxlength="30" value="定期試験" /></div>
       <div class="field"><label>科目（任意）</label><input id="boss-subject" maxlength="20" /></div>
       <div class="field"><label>試験まで</label><select id="boss-days">${options}</select></div>
-      <div class="ob-note" id="boss-preview">${preview(7)}</div>
+      <div class="field"><label>1日のノルマ</label><select id="boss-quota">${quotaOptions}</select></div>
+      <div class="ob-note" id="boss-preview">${preview(7, 2)}</div>
       <div class="modal-actions">
         <button class="btn ghost" data-action="close-modal">やめる</button>
         <button class="btn primary" data-action="rpg-create-boss">ボスを立てる</button>
@@ -1737,9 +1930,10 @@
         const name = $('#boss-name').value.trim() || '定期試験';
         const subject = $('#boss-subject').value.trim() || '試験';
         const days = Number($('#boss-days').value) || 7;
-        createBoss(name, subject, days);
+        const quota = Number($('#boss-quota').value) || 2;
+        createBoss(name, subject, days, quota);
         closeModal(); go('rpg');
-        toast(`👹 ${name} が出現。試験まで ${periodLabel(days)}。`);
+        toast(`👹 ${name} が出現。1日 ${quota} セッション × ${days}日。`);
         break;
       }
       case 'rpg-target-boss': state.rpg.target = 'boss'; save(); renderAll(); break;
@@ -1759,7 +1953,7 @@
       case 'rpg-attack-boss':
         state.rpg.target = 'boss'; save();
         startFocusInHome();
-        toast('ボス戦開始。集中時間がそのままダメージになる');
+        toast('ボス戦開始。1セッション = 10ダメージ。今日のノルマを埋めよう');
         break;
       case 'rpg-retire-boss':
         openModal(`<h2>ボス戦から撤退する？</h2><div class="sub">ここまでのダメージは消え、試験は未討伐のままになります。</div>
@@ -1878,10 +2072,11 @@
     if (e.target.id === 'intent-input') { state.focus.intent = e.target.value; save(); }
   });
   document.addEventListener('change', (e) => {
-    if (e.target.id === 'boss-days') {
-      const d = Number(e.target.value) || 7;
+    if (e.target.id === 'boss-days' || e.target.id === 'boss-quota') {
+      const d = Number($('#boss-days')?.value) || 7;
+      const q = Number($('#boss-quota')?.value) || 2;
       const el = $('#boss-preview');
-      if (el) el.textContent = `HP ${d * 60} ・ 討伐報酬 +${Math.round(d * 60 * 0.5)} XP / +${Math.round(d * 60 * 0.3)} 金貨`;
+      if (el) el.innerHTML = `HP ${d * q * BOSS_DAMAGE_PER_SESSION} ・ 1日 ${q} セッション × ${d}日（合計 ${d * q} セッション）<br>1セッション = ${BOSS_DAMAGE_PER_SESSION}ダメージ ・ 討伐報酬 +${d * q * 15} XP / +${d * q * 10} 金貨`;
     }
   });
   document.addEventListener('keydown', (e) => {
