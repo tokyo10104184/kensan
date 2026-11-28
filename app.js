@@ -9,7 +9,7 @@
 
   /* ---------------- constants ---------------- */
   const KEY = 'kensan_state_v1';
-  const BUILD_VERSION = '2026.11.28c';
+  const BUILD_VERSION = '2026.11.28d';
   const AVATARS = ['🔥', '🥷', '🦊', '🐺', '🦅', '🦉', '🧠', '⚔️', '🌙', '🐉', '🧘', '🚀'];
   const TITLES = [
     { lv: 1,  name: '見習い',   en: 'APPRENTICE' },
@@ -185,6 +185,7 @@
   let modalOptions = { closable: true };
   let lastTickSave = 0;
   let bossCalScrolledFor = null;
+  let audioCtx = null;
 
   function load() {
     try {
@@ -290,25 +291,79 @@
       setTimeout(() => el.remove(), 1900);
     }
   }
-  function chime() {
-    if (!state.settings.sound) return;
+  function getAudioCtx() {
+    if (!state.settings.sound) return null;
     try {
       const Ctx = window.AudioContext || window.webkitAudioContext;
-      if (!Ctx) return;
-      const ctx = new Ctx();
-      [523, 659, 784, 1047].forEach((f, i) => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'sine'; o.frequency.value = f;
-        const t = ctx.currentTime + i * 0.12;
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.13, t + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
-        o.connect(g); g.connect(ctx.destination);
-        o.start(t); o.stop(t + 0.6);
-      });
-      setTimeout(() => ctx.close(), 1500);
+      if (!Ctx) return null;
+      if (!audioCtx) audioCtx = new Ctx();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    } catch (e) { return null; }
+  }
+  function tone(ctx, freq, at, dur, type, vol) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(freq, at);
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(vol, at + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(at); o.stop(at + dur + 0.02);
+  }
+  // 「始まる／終わる」を明示する短い効果音。settings.sound で一括オン/オフ。
+  function sfx(name) {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const t = ctx.currentTime + 0.005;
+    try {
+      switch (name) {
+        case 'start':
+          tone(ctx, 392, t, 0.18, 'sine', 0.09);
+          tone(ctx, 587, t + 0.08, 0.22, 'sine', 0.09);
+          break;
+        case 'pause':
+          tone(ctx, 330, t, 0.14, 'sine', 0.07);
+          tone(ctx, 247, t + 0.06, 0.16, 'sine', 0.06);
+          break;
+        case 'reset':
+          tone(ctx, 220, t, 0.12, 'triangle', 0.05);
+          break;
+        case 'tick':
+          tone(ctx, 880, t, 0.04, 'sine', 0.035);
+          break;
+        case 'mode':
+          tone(ctx, 700, t, 0.06, 'sine', 0.045);
+          break;
+        case 'check':
+          tone(ctx, 659, t, 0.09, 'sine', 0.08);
+          tone(ctx, 988, t + 0.07, 0.13, 'sine', 0.07);
+          break;
+        case 'uncheck':
+          tone(ctx, 440, t, 0.09, 'sine', 0.05);
+          break;
+        case 'coin':
+          tone(ctx, 988, t, 0.08, 'square', 0.045);
+          tone(ctx, 1319, t + 0.07, 0.16, 'square', 0.04);
+          break;
+        case 'fail':
+          tone(ctx, 330, t, 0.16, 'sawtooth', 0.06);
+          tone(ctx, 247, t + 0.12, 0.26, 'sawtooth', 0.05);
+          break;
+        case 'victory':
+          [523, 659, 784, 1047, 1319].forEach((f, i) => tone(ctx, f, t + i * 0.09, 0.5, 'triangle', 0.09));
+          break;
+        case 'boss':
+          tone(ctx, 196, t, 0.22, 'sawtooth', 0.07);
+          tone(ctx, 147, t + 0.14, 0.32, 'sawtooth', 0.06);
+          break;
+        case 'success':
+        default:
+          [523, 659, 784, 1047].forEach((f, i) => tone(ctx, f, t + i * 0.1, 0.42, 'sine', 0.11));
+      }
     } catch (e) { /* ignore */ }
   }
+  function chime() { sfx('success'); }
   function notify(title, body) {
     if (!state.settings.notify) return;
     try {
@@ -343,6 +398,7 @@
     state.focus.mode = mode;
     state.focus.minutes = modeMinutes(mode);
     state.focus.remaining = modeMinutes(mode) * 60;
+    sfx('mode');
     save(); renderAll();
   }
   function startTimer() {
@@ -350,6 +406,7 @@
     if (state.focus.remaining <= 0) state.focus.remaining = state.focus.minutes * 60;
     state.focus.endAt = Date.now() + state.focus.remaining * 1000;
     state.focus.running = true;
+    sfx('start');
     save(); renderAll();
   }
   function pauseTimer() {
@@ -357,12 +414,14 @@
     state.focus.remaining = Math.max(0, Math.ceil((state.focus.endAt - Date.now()) / 1000));
     state.focus.running = false;
     state.focus.endAt = null;
+    sfx('pause');
     save(); renderAll();
   }
   function resetTimer(silent = false) {
     state.focus.running = false;
     state.focus.endAt = null;
     state.focus.remaining = state.focus.minutes * 60;
+    if (!silent) sfx('reset');
     save();
     if (!silent) renderAll();
   }
@@ -373,7 +432,9 @@
       boostDriver('obsession', -5);
       toast('コンボが途切れた。規律 -3 / 執着 -5');
     }
-    resetTimer();
+    sfx('fail');
+    resetTimer(true);
+    renderAll();
   }
   function completeSession() {
     const wasFocus = state.focus.mode === 'focus';
@@ -382,6 +443,7 @@
 
     if (!wasFocus) {
       boostDriver('motivation', 1);
+      sfx('success');
       toast('休憩完了。集中の燃料を補給した。');
       renderAll();
       return;
@@ -433,6 +495,8 @@
     checkQuests();
     save();
     chime();
+    if (rpgHit && rpgHit.defeated) sfx('victory');
+    else if (rpgHit && rpgHit.bonus) sfx('coin');
     notify('研鑽 — セッション完了', `+${xpGain} XP  /  +${goldGain} 金貨  /  コンボ x${comboMult().toFixed(1)}${rpgHitText(rpgHit)}`);
     particles('🔥', 14);
     if (rpgHit) particles(rpgHit.defeated ? '🏆' : rpgHit.bonus ? '⚡' : '⚔', rpgHit.defeated ? 16 : 8);
@@ -565,7 +629,7 @@
       boostDriver('ego', 4);
       boostDriver('obsession', 3);
       particles('👑', 12);
-      chime();
+      sfx('victory');
       toast(`👑 ${s.rival.name}を抜いた！ +100 XP / +80 金貨`);
     }
   }
@@ -1844,7 +1908,7 @@
       <div class="field"><label>長い休憩（分・1〜120）</label><input id="set-long" type="number" min="1" max="120" step="1" inputmode="numeric" value="${state.settings.longBreakMin}" /></div>
       <p class="muted" style="font-size:10px;margin:-6px 0 14px">好きな分数を直接入力できます。</p>
       <div class="field" style="display:flex;justify-content:space-between;align-items:center">
-        <label style="margin:0">完了時に効果音</label>
+        <label style="margin:0">効果音（開始・終了など）</label>
         <button class="btn small ${state.settings.sound ? 'primary' : ''}" data-action="toggle-sound">${state.settings.sound ? 'ON' : 'OFF'}</button>
       </div>
       <div class="field" style="display:flex;justify-content:space-between;align-items:center">
@@ -1910,7 +1974,7 @@
     if (id === 'tome') { state.stats.tomes += 1; boostDriver('discipline', 3); }
     if (id === 'incense') boostDriver('motivation', 2);
     if (id === 'crown') boostDriver('ego', 5);
-    save(); chime(); particles(item.icon, 8);
+    save(); sfx('coin'); particles(item.icon, 8);
     toast(`${item.icon} ${item.name} を手に入れた`);
     renderAll();
   }
@@ -1935,9 +1999,11 @@
       state.stats.xp += xp; state.stats.gold += gold; state.stats.tasksDone += 1;
       todayStats().tasks += 1;
       boostDriver('motivation', 2); boostDriver('ego', 2);
-      particles('✦', 7); chime();
+      particles('✦', 7); sfx('check');
       toast(`完了！ +${xp} XP / +${gold} 金貨`);
       checkQuests();
+    } else {
+      sfx('uncheck');
     }
     save(); renderAll();
   }
