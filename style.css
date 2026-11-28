@@ -917,6 +917,60 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   .home-timer-hero .focus-why { margin-top: 12px; }
 }
 
+/* ---------------- full-screen focus mode ---------------- */
+body.focus-mode { overflow: hidden; }
+body.focus-mode .sidebar,
+body.focus-mode .topbar,
+body.focus-mode .mobile-nav,
+body.focus-mode .fab { display: none !important; }
+body.focus-mode .main { width: 100%; }
+body.focus-mode .view-container { padding: 0; overflow: hidden; }
+body.focus-mode .view { animation: none !important; }
+body.focus-mode #home-classic,
+body.focus-mode .scroll-hint { display: none !important; }
+body.focus-mode .home-timer-hero {
+  position: fixed; inset: 0; z-index: 90;
+  min-height: 0; height: 100dvh; margin: 0; padding: 24px;
+  display: flex; align-items: center; justify-content: center;
+  background:
+    radial-gradient(1000px 720px at 50% 42%, rgba(255,106,77,.10), transparent 62%),
+    radial-gradient(800px 520px at 18% 100%, rgba(181,107,255,.08), transparent 65%),
+    var(--bg);
+  animation: focusModeIn .3s cubic-bezier(.22,1,.36,1);
+}
+body.focus-mode .home-timer-hero::before {
+  content: '集中モード';
+  position: absolute; top: max(26px, env(safe-area-inset-top)); left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px; font-weight: 800; letter-spacing: .32em; color: var(--dim);
+}
+body.focus-mode .home-timer-hero .focus-stage {
+  width: 100%; max-width: 760px; padding: 0;
+  border: none; background: transparent; box-shadow: none;
+}
+body.focus-mode .home-timer-hero .focus-step,
+body.focus-mode .home-timer-hero .mode-tabs,
+body.focus-mode .home-timer-hero .focus-reward-inline,
+body.focus-mode .home-timer-hero .focus-why { display: none !important; }
+body.focus-mode .home-timer-hero .timer-ring {
+  width: min(460px, 78vw, 56vh); height: min(460px, 78vw, 56vh);
+  box-shadow: 0 0 90px rgba(255,106,77,.18);
+  animation: focusRingPulse 4.5s ease-in-out infinite;
+}
+body.focus-mode .home-timer-hero .timer-time { font-size: clamp(64px, 11vh, 110px); }
+body.focus-mode .home-timer-hero .timer-status { font-size: 13px; letter-spacing: .28em; margin-top: 16px; }
+body.focus-mode .home-timer-hero .timer-combo { font-size: 14px; margin-top: 20px; }
+body.focus-mode .home-timer-hero .timer-controls { width: 100%; max-width: 420px; margin-top: 38px; gap: 14px; justify-content: center; }
+body.focus-mode .home-timer-hero .timer-controls .btn { flex: 1 1 0; min-width: 0; max-width: 200px; padding: 13px 20px; }
+@keyframes focusModeIn {
+  from { opacity: 0; transform: scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes focusRingPulse {
+  0%, 100% { box-shadow: 0 0 70px rgba(255,106,77,.14); }
+  50% { box-shadow: 0 0 110px rgba(255,106,77,.24); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }

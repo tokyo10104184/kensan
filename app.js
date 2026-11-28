@@ -9,7 +9,7 @@
 
   /* ---------------- constants ---------------- */
   const KEY = 'kensan_state_v1';
-  const BUILD_VERSION = '2026.11.28a';
+  const BUILD_VERSION = '2026.11.28b';
   const AVATARS = ['🔥', '🥷', '🦊', '🐺', '🦅', '🦉', '🧠', '⚔️', '🌙', '🐉', '🧘', '🚀'];
   const TITLES = [
     { lv: 1,  name: '見習い',   en: 'APPRENTICE' },
@@ -907,6 +907,9 @@
     const view = $('#view');
     const renders = { home: viewHome, quests: viewQuests, rpg: viewRpg, rivals: viewRivals, shop: viewShop };
     view.innerHTML = `<div class="view">${(renders[state.view] || viewHome)()}</div>`;
+    // 集中セッション中は、タイマー以外を消した全画面モードにする。
+    const focusMode = state.focus.running && state.focus.mode === 'focus' && state.view === 'home';
+    document.body.classList.toggle('focus-mode', focusMode);
     if ($('#timer-ring')) updateTimerDom();
     if ($('#boss-calendar')) scrollBossCalendarToToday();
   }
