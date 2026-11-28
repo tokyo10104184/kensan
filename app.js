@@ -9,7 +9,7 @@
 
   /* ---------------- constants ---------------- */
   const KEY = 'kensan_state_v1';
-  const BUILD_VERSION = '2026.11.28l';
+  const BUILD_VERSION = '2026.11.28m';
   const AVATARS = ['🔥', '🥷', '🦊', '🐺', '🦅', '🦉', '🧠', '⚔️', '🌙', '🐉', '🧘', '🚀'];
   const TITLES = [
     { lv: 1,  name: '見習い',   en: 'APPRENTICE' },
@@ -1037,23 +1037,48 @@
     });
   }
   // ホーム先頭では上部バーを畳み、スクロール量に比例して少しずつ引き下げる。
+  // バーの高さは変えず transform で動かし、スクロール領域の再レイアウトを避ける。
   const TOPBAR_FULL_AT = 120;
+  function cssSupports(rule) {
+    try { return typeof CSS !== 'undefined' && CSS.supports && CSS.supports(rule); } catch (e) { return false; }
+  }
+  const supportsScrollTimeline = typeof ScrollTimeline !== 'undefined'
+    && cssSupports('animation-timeline: scroll()')
+    && cssSupports('timeline-scope: --kensan-home-scroll');
+  const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  let topbarRaf = 0;
+  let topbarHidden = null;
   function updateTopbarVisibility() {
     const viewEl = $('#view');
     const y = state.view === 'home' && viewEl ? Math.max(0, viewEl.scrollTop) : TOPBAR_FULL_AT;
     const p = clamp(y / TOPBAR_FULL_AT, 0, 1);
-    document.body.style.setProperty('--bar-p', p.toFixed(3));
-    document.body.classList.toggle('home-bar-hidden', state.view === 'home' && p === 0);
+    if (!supportsScrollTimeline) {
+      const main = document.querySelector('.main');
+      if (main) main.style.setProperty('--bar-p', p.toFixed(3));
+    }
+    const hidden = !reduceMotion && state.view === 'home' && p === 0;
+    if (hidden !== topbarHidden) {
+      topbarHidden = hidden;
+      document.body.classList.toggle('home-bar-hidden', hidden);
+    }
+  }
+  function scheduleTopbarUpdate() {
+    if (topbarRaf) return;
+    topbarRaf = requestAnimationFrame(() => {
+      topbarRaf = 0;
+      updateTopbarVisibility();
+    });
   }
   function renderAll() {
     renderTopbar();
     renderDriverMini();
     renderNav();
     const view = $('#view');
+    const focusMode = state.focus.running && state.view === 'home';
     const renders = { home: viewHome, quests: viewQuests, rpg: viewRpg, rivals: viewRivals, shop: viewShop };
     view.innerHTML = `<div class="view">${(renders[state.view] || viewHome)()}</div>`;
+    document.body.classList.toggle('view-home', state.view === 'home');
     // タイマーが動いている間は、集中／休憩を通してタイマーだけの全画面モードにする。
-    const focusMode = state.focus.running && state.view === 'home';
     document.body.classList.toggle('focus-mode', focusMode);
     document.body.dataset.phase = focusMode ? state.focus.mode : '';
     updateTopbarVisibility();
@@ -1085,6 +1110,8 @@
     const previewTasks = openTasks.slice(0, 2);
 
     return `
+      <div class="home-shift">
+      ${state.focus.running ? '' : '<div class="topbar-spacer" aria-hidden="true"></div>'}
       <div id="home-greeting" class="home-greeting-wrap">
         <div class="home-hero">
           <div class="home-hero-main">
@@ -1176,6 +1203,7 @@
       <div class="home-footer">
         <button class="btn small ghost" data-action="ego-card">👑 自我的名刺を見る</button>
         <span class="dim" style="font-size:10px">🛡️ シールド ${state.stats.shields} 枚 ・ 🎟️ チケット ${state.stats.tickets} 枚</span>
+      </div>
       </div>
       </div>
     `;
@@ -1833,6 +1861,15 @@
     tourSteps = buildTourSteps().filter((s) => document.querySelector(s.sel));
     tourIndex = 0;
     if (!tourSteps.length) { finishTour(false); return; }
+    // 最初のステップが上部バー内なら、バーが見える位置までスクロールしておく。
+    const firstEl = tourSteps[0] && document.querySelector(tourSteps[0].sel);
+    if (firstEl && firstEl.closest('.topbar') && state.view === 'home') {
+      const viewEl = $('#view');
+      if (viewEl) {
+        viewEl.scrollTop = TOPBAR_FULL_AT;
+        updateTopbarVisibility();
+      }
+    }
     renderTourStep();
   }
 
@@ -2251,6 +2288,7 @@
   });
 
   document.addEventListener('visibilitychange', () => {
+    updateTopbarVisibility();
     if (!document.hidden && state.focus.running) {
       state.focus.remaining = Math.max(0, Math.ceil((state.focus.endAt - Date.now()) / 1000));
       if (state.focus.remaining <= 0) completeSession();
@@ -2259,7 +2297,7 @@
   });
 
   /* ---------------- boot ---------------- */
-  $('#view').addEventListener('scroll', updateTopbarVisibility);
+  $('#view').addEventListener('scroll', scheduleTopbarUpdate, { passive: true });
   sanitizeSettings();
   applyDecay();
   checkRpgDay();

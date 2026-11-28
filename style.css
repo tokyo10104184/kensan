@@ -107,22 +107,65 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .cog { color: var(--dim); font-size: 14px; }
 .avatar { font-size: 20px; width: 34px; text-align: center; }
 
-.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.main {
+  flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative;
+  timeline-scope: --kensan-home-scroll;
+}
 
 .topbar {
-  height: calc(var(--bar-h) * var(--bar-p, 1));
-  flex: 0 0 calc(var(--bar-h) * var(--bar-p, 1));
+  height: var(--bar-h);
+  flex: 0 0 var(--bar-h);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 34px;
   border-bottom: 1px solid var(--border);
-  background: rgba(8,8,13,.6);
-  backdrop-filter: blur(14px);
+  background: linear-gradient(180deg, rgba(8,8,13,.97), rgba(8,8,13,.9));
   z-index: 5;
   overflow: hidden;
   opacity: var(--bar-p, 1);
   transform: translateY(calc((var(--bar-p, 1) - 1) * 100%));
+  will-change: transform, opacity;
+}
+body.view-home .topbar {
+  position: absolute; top: 0; left: 0; right: 0;
 }
 body.home-bar-hidden .topbar { pointer-events: none; }
+
+/* ホーム先頭ではバー分を上へ詰め、スクロールに比例して押し下げる。
+   スクロール領域自体の高さは変えないので、スクロール中の引っかかりを防ぐ。 */
+.topbar-spacer { height: var(--bar-h); }
+.home-shift {
+  transform: translateY(calc(var(--bar-h) * (var(--bar-p, 1) - 1)));
+  will-change: transform;
+}
+body.view-home .view-container { padding-bottom: max(60px, var(--bar-h)); overflow-anchor: none; }
+body.focus-mode .home-shift { transform: none; will-change: auto; }
+
+/* 対応ブラウザではスクロール駆動アニメーションでコンポジタ上で動かす。
+   JSのスクロールイベントに依存しないため、引っかかりが出にくい。 */
+@supports (animation-timeline: scroll()) and (timeline-scope: --kensan-home-scroll) {
+  #view {
+    scroll-timeline-name: --kensan-home-scroll;
+    scroll-timeline-axis: block;
+  }
+  body.view-home:not(.focus-mode) .topbar {
+    animation: kensanTopbarReveal linear both;
+    animation-timeline: --kensan-home-scroll;
+    animation-range: 0 120px;
+  }
+  body.view-home:not(.focus-mode) .home-shift {
+    animation: kensanHomeShift linear both;
+    animation-timeline: --kensan-home-scroll;
+    animation-range: 0 120px;
+  }
+  @keyframes kensanTopbarReveal {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes kensanHomeShift {
+    from { transform: translateY(calc(-1 * var(--bar-h))); }
+    to { transform: translateY(0); }
+  }
+}
 .topbar-left, .topbar-right { display: flex; align-items: center; gap: 14px; }
 .mobile-brand { display: none; align-items: center; gap: 8px; }
 .mobile-brand strong { letter-spacing: .12em; }
@@ -156,7 +199,7 @@ body.home-bar-hidden .topbar { pointer-events: none; }
 .stat-pill.combo strong { color: var(--obsession); }
 .stat-pill.gold strong { color: var(--ego); }
 
-.view-container { flex: 1; overflow-y: auto; padding: 30px 34px 60px; scroll-behavior: smooth; }
+.view-container { flex: 1; overflow-y: auto; padding: 30px 34px 60px; }
 .view { max-width: 1180px; margin: 0 auto; animation: fadeIn .35s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
@@ -553,6 +596,7 @@ body.home-bar-hidden .topbar { pointer-events: none; }
   min-height: calc(100vh - 150px);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   position: relative; padding: 28px 0 72px; margin-bottom: 22px;
+  scroll-margin-top: var(--bar-h);
 }
 .home-timer-hero .focus-stage {
   width: 100%; max-width: 860px;
@@ -859,6 +903,7 @@ body.home-bar-hidden .topbar { pointer-events: none; }
   .stat-pill.combo { display: none; }
   .topbar-right { gap: 7px; }
   .view-container { padding: 18px 16px 100px; }
+  body.view-home .view-container { padding-bottom: max(100px, var(--bar-h)); }
   .home-hero { flex-direction: column; align-items: flex-start; padding: 20px; }
   .home-timer-hero { min-height: calc(100vh - 176px); padding-bottom: 56px; margin-bottom: 18px; }
   .home-timer-hero .focus-stage {
@@ -1004,4 +1049,11 @@ body.focus-mode .home-timer-hero .timer-controls .btn { flex: 1 1 0; min-width: 
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  body.view-home .topbar,
+  body.view-home .home-shift {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    will-change: auto !important;
+  }
 }
