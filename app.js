@@ -9,7 +9,7 @@
 
   /* ---------------- constants ---------------- */
   const KEY = 'kensan_state_v1';
-  const BUILD_VERSION = '2026.11.28i';
+  const BUILD_VERSION = '2026.11.28j';
   const AVATARS = ['🔥', '🥷', '🦊', '🐺', '🦅', '🦉', '🧠', '⚔️', '🌙', '🐉', '🧘', '🚀'];
   const TITLES = [
     { lv: 1,  name: '見習い',   en: 'APPRENTICE' },
@@ -1036,6 +1036,12 @@
       if (el.dataset.action === 'nav') el.classList.toggle('active', el.dataset.view === state.view);
     });
   }
+  // ホームの先頭では上部バーを畳み、スクロールし始めたら引き下げて表示する。
+  function updateTopbarVisibility() {
+    const viewEl = $('#view');
+    const atTop = state.view === 'home' && (viewEl ? viewEl.scrollTop : 0) <= 8;
+    document.body.classList.toggle('home-bar-hidden', atTop);
+  }
   function renderAll() {
     renderTopbar();
     renderDriverMini();
@@ -1047,6 +1053,7 @@
     const focusMode = state.focus.running && state.view === 'home';
     document.body.classList.toggle('focus-mode', focusMode);
     document.body.dataset.phase = focusMode ? state.focus.mode : '';
+    updateTopbarVisibility();
     if ($('#timer-ring')) updateTimerDom();
     if ($('#boss-calendar')) scrollBossCalendarToToday();
   }
@@ -1055,6 +1062,7 @@
     state.view = view;
     save(); renderAll();
     $('#view').scrollTop = 0;
+    updateTopbarVisibility();
   }
 
   /* ---------- HOME ---------- */
@@ -2248,6 +2256,7 @@
   });
 
   /* ---------------- boot ---------------- */
+  $('#view').addEventListener('scroll', updateTopbarVisibility);
   sanitizeSettings();
   applyDecay();
   checkRpgDay();

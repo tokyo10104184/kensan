@@ -116,6 +116,13 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   background: rgba(8,8,13,.6);
   backdrop-filter: blur(14px);
   z-index: 5;
+  overflow: hidden;
+  transition: height .3s cubic-bezier(.22,1,.36,1), flex-basis .3s cubic-bezier(.22,1,.36,1), opacity .2s ease, transform .3s cubic-bezier(.22,1,.36,1);
+}
+body.home-bar-hidden .topbar {
+  height: 0; flex-basis: 0;
+  opacity: 0; transform: translateY(-100%);
+  pointer-events: none;
 }
 .topbar-left, .topbar-right { display: flex; align-items: center; gap: 14px; }
 .mobile-brand { display: none; align-items: center; gap: 8px; }
