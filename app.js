@@ -9,7 +9,7 @@
 
   /* ---------------- constants ---------------- */
   const KEY = 'kensan_state_v1';
-  const BUILD_VERSION = '2026.11.28b';
+  const BUILD_VERSION = '2026.11.28c';
   const AVATARS = ['🔥', '🥷', '🦊', '🐺', '🦅', '🦉', '🧠', '⚔️', '🌙', '🐉', '🧘', '🚀'];
   const TITLES = [
     { lv: 1,  name: '見習い',   en: 'APPRENTICE' },
@@ -237,6 +237,24 @@
   };
   const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   const comboMult = () => 1 + Math.min(state.stats.combo, 10) * 0.1;
+  const MINUTE_LIMITS = { focus: [1, 180], short: [1, 60], long: [1, 120] };
+  function safeMinutes(value, mode, fallback) {
+    const [min, max] = MINUTE_LIMITS[mode] || MINUTE_LIMITS.focus;
+    const n = Math.round(Number(value));
+    return Number.isFinite(n) && n > 0 ? clamp(n, min, max) : fallback;
+  }
+  function sanitizeSettings() {
+    const s = state.settings;
+    s.focusMin = safeMinutes(s.focusMin, 'focus', 25);
+    s.breakMin = safeMinutes(s.breakMin, 'short', 5);
+    s.longBreakMin = safeMinutes(s.longBreakMin, 'long', 15);
+    const f = state.focus;
+    if (!['focus', 'short', 'long'].includes(f.mode)) f.mode = 'focus';
+    if (!f.running) {
+      f.minutes = modeMinutes(f.mode);
+      f.remaining = f.minutes * 60;
+    }
+  }
 
   function levelInfo() {
     const xp = state.stats.xp;
@@ -1132,6 +1150,14 @@
             <button class="mode-tab ${f.mode === 'long' ? 'active' : ''}" data-action="mode" data-mode="long">長休憩 ${state.settings.longBreakMin}分</button>
           </div>
 
+          <div class="timer-minutes-field ${f.running ? 'disabled' : ''}">
+            <label for="timer-minutes">長さを手入力（分）</label>
+            <div class="timer-minutes-row">
+              <input id="timer-minutes" type="number" min="${MINUTE_LIMITS[f.mode][0]}" max="${MINUTE_LIMITS[f.mode][1]}" step="1" inputmode="numeric" value="${f.minutes}" ${f.running ? 'disabled' : ''} />
+              <span>分</span>
+            </div>
+          </div>
+
           <div class="timer-ring" id="timer-ring" style="--timer-c:${color}">
             <div class="timer-inner">
               <div class="timer-time" id="timer-time">${fmtTime(f.remaining)}</div>
@@ -1566,6 +1592,7 @@
     const task = $('#ob-task'); if (task) ob.taskTitle = task.value.trim();
     const subject = $('#ob-task-subject'); if (subject) ob.taskSubject = subject.value.trim();
     const diff = $('#ob-task-diff'); if (diff) ob.difficulty = Number(diff.value) || 2;
+    const fm = $('#ob-focus-min'); if (fm) ob.focusMin = safeMinutes(fm.value, 'focus', 25);
   }
 
   function obBody() {
@@ -1600,7 +1627,7 @@
       return `
         <h2 class="ob-title">集中の長さと、最初のタスク</h2>
         <p class="ob-sub">無理のない長さで始めましょう。あとから変えられます。</p>
-        <div class="field"><label>1セッションの長さ</label><div class="ob-focus">${[15, 25, 45].map((m) => `<button class="ob-focus-opt ${ob.focusMin === m ? 'selected' : ''}" data-action="ob-focus" data-min="${m}"><strong>${m}分</strong><small>${m === 15 ? '軽め' : m === 25 ? '標準' : 'しっかり'}</small></button>`).join('')}</div></div>
+        <div class="field"><label>1セッションの長さ（分）</label><input id="ob-focus-min" type="number" min="1" max="180" step="1" inputmode="numeric" value="${ob.focusMin}" /></div>
         <div class="field"><label>最初のタスク（任意）</label><input id="ob-task" maxlength="60" value="${esc(ob.taskTitle)}" /></div>
         <div style="display:flex;gap:8px">
           <input class="intent-input" id="ob-task-subject" aria-label="科目" style="flex:1" value="${esc(ob.taskSubject)}" />
@@ -1610,7 +1637,7 @@
             <option value="3" ${ob.difficulty === 3 ? 'selected' : ''}>★★★ 難</option>
           </select>
         </div>
-        <div class="ob-note">💡 タスクは「タスク」画面からいつでも追加・削除できます。</div>`;
+        <div class="ob-note">💡 集中は1〜180分で自由に入力できます。タスクは「タスク」画面からいつでも追加・削除できます。</div>`;
     }
     const rival = RIVALS.find((r) => r.id === ob.rivalId) || RIVALS[0];
     return `
@@ -1651,9 +1678,10 @@
     state.profile.name = ob.name || '修行者';
     state.profile.why = ob.why || '';
     state.profile.avatar = ob.avatar || '🔥';
-    state.settings.focusMin = ob.focusMin || 25;
+    state.settings.focusMin = safeMinutes(ob.focusMin, 'focus', 25);
     state.duel.selected = ob.rivalId || 'hokuto';
     state.focus.mode = 'focus';
+    sanitizeSettings();
     state.focus.minutes = state.settings.focusMin;
     state.focus.remaining = state.focus.minutes * 60;
     state.focus.running = false;
@@ -1811,8 +1839,10 @@
       <div class="field"><label>なぜ勉強するか（モチベーションの核）</label><textarea id="prof-why">${esc(state.profile.why)}</textarea></div>
       <div class="field"><label>分身</label><div class="avatar-picker" id="prof-avatars">${AVATARS.map((a) => `<button class="avatar-option ${a === state.profile.avatar ? 'selected' : ''}" data-action="pick-avatar" data-avatar="${a}">${a}</button>`).join('')}</div></div>
       <div class="section-title" style="--accent:var(--discipline);margin:20px 0 12px"><h3>集中の設定</h3></div>
-      <div class="field"><label>集中時間（分）</label><select id="set-focus">${[15, 25, 45, 60].map((m) => `<option value="${m}" ${state.settings.focusMin === m ? 'selected' : ''}>${m} 分</option>`).join('')}</select></div>
-      <div class="field"><label>短い休憩（分）</label><select id="set-break">${[5, 10, 15].map((m) => `<option value="${m}" ${state.settings.breakMin === m ? 'selected' : ''}>${m} 分</option>`).join('')}</select></div>
+      <div class="field"><label>集中時間（分・1〜180）</label><input id="set-focus" type="number" min="1" max="180" step="1" inputmode="numeric" value="${state.settings.focusMin}" /></div>
+      <div class="field"><label>短い休憩（分・1〜60）</label><input id="set-break" type="number" min="1" max="60" step="1" inputmode="numeric" value="${state.settings.breakMin}" /></div>
+      <div class="field"><label>長い休憩（分・1〜120）</label><input id="set-long" type="number" min="1" max="120" step="1" inputmode="numeric" value="${state.settings.longBreakMin}" /></div>
+      <p class="muted" style="font-size:10px;margin:-6px 0 14px">好きな分数を直接入力できます。</p>
       <div class="field" style="display:flex;justify-content:space-between;align-items:center">
         <label style="margin:0">完了時に効果音</label>
         <button class="btn small ${state.settings.sound ? 'primary' : ''}" data-action="toggle-sound">${state.settings.sound ? 'ON' : 'OFF'}</button>
@@ -2004,10 +2034,14 @@
         state.profile.name = $('#prof-name').value.trim() || '修行者';
         state.profile.why = $('#prof-why').value.trim();
         state.profile.avatar = $('#prof-avatars .avatar-option.selected')?.dataset.avatar || state.profile.avatar;
-        state.settings.focusMin = Number($('#set-focus').value);
-        state.settings.breakMin = Number($('#set-break').value);
-        if (state.focus.mode === 'focus') { state.focus.minutes = state.settings.focusMin; if (!state.focus.running) state.focus.remaining = state.focus.minutes * 60; }
-        if (state.focus.mode === 'short') { state.focus.minutes = state.settings.breakMin; if (!state.focus.running) state.focus.remaining = state.focus.minutes * 60; }
+        state.settings.focusMin = safeMinutes($('#set-focus').value, 'focus', 25);
+        state.settings.breakMin = safeMinutes($('#set-break').value, 'short', 5);
+        state.settings.longBreakMin = safeMinutes($('#set-long').value, 'long', 15);
+        sanitizeSettings();
+        if (!state.focus.running) {
+          state.focus.minutes = modeMinutes(state.focus.mode);
+          state.focus.remaining = state.focus.minutes * 60;
+        }
         closeModal(); save(); renderAll(); toast('設定を保存した');
         break;
       }
@@ -2037,7 +2071,6 @@
         break;
       case 'ob-avatar': captureObStep(); ob.avatar = el.dataset.avatar; renderOnboarding(); break;
       case 'ob-rival': captureObStep(); ob.rivalId = el.dataset.id; renderOnboarding(); break;
-      case 'ob-focus': captureObStep(); ob.focusMin = Number(el.dataset.min); renderOnboarding(); break;
       case 'ob-finish':
         captureObStep();
         applyOnboarding();
@@ -2075,8 +2108,23 @@
 
   document.addEventListener('input', (e) => {
     if (e.target.id === 'intent-input') { state.focus.intent = e.target.value; save(); }
+    if (e.target.id === 'timer-minutes') {
+      if (state.focus.running) return;
+      const mode = state.focus.mode;
+      const m = safeMinutes(e.target.value, mode, modeMinutes(mode));
+      state.focus.minutes = m;
+      state.focus.remaining = m * 60;
+      state.settings[mode === 'focus' ? 'focusMin' : mode === 'short' ? 'breakMin' : 'longBreakMin'] = m;
+      save();
+      updateTimerDom();
+      const tab = $(`.mode-tab[data-mode="${mode}"]`);
+      if (tab) tab.textContent = `${mode === 'focus' ? '集中' : mode === 'short' ? '休憩' : '長休憩'} ${m}分`;
+      const heroCta = $('.hero-cta');
+      if (heroCta && mode === 'focus') heroCta.textContent = `▶ ${m}分 集中する`;
+    }
   });
   document.addEventListener('change', (e) => {
+    if (e.target.id === 'timer-minutes') { e.target.value = state.focus.minutes; return; }
     if (e.target.id === 'boss-days' || e.target.id === 'boss-quota') {
       const d = Number($('#boss-days')?.value) || 7;
       const q = Number($('#boss-quota')?.value) || 2;
@@ -2116,6 +2164,7 @@
   });
 
   /* ---------------- boot ---------------- */
+  sanitizeSettings();
   applyDecay();
   checkRpgDay();
   save();

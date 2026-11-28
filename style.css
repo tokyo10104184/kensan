@@ -373,6 +373,17 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   font-size: 12px; outline: none;
 }
 .intent-input:focus { border-color: var(--obsession); }
+.timer-minutes-field { width: 100%; max-width: 320px; margin: -10px 0 14px; text-align: center; }
+.timer-minutes-field.disabled { opacity: .45; }
+.timer-minutes-field label { display: block; font-size: 10px; color: var(--muted); letter-spacing: .08em; margin-bottom: 6px; }
+.timer-minutes-row { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.timer-minutes-row input {
+  width: 92px; padding: 8px 10px; border-radius: 9px; text-align: center;
+  background: rgba(0,0,0,.3); border: 1px solid var(--border); outline: none;
+  font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.timer-minutes-row input:focus { border-color: var(--obsession); }
+.timer-minutes-row span { font-size: 11px; color: var(--muted); }
 
 /* duel arena */
 .duel-arena {
@@ -950,6 +961,7 @@ body.focus-mode .home-timer-hero .focus-stage {
 }
 body.focus-mode .home-timer-hero .focus-step,
 body.focus-mode .home-timer-hero .mode-tabs,
+body.focus-mode .home-timer-hero .timer-minutes-field,
 body.focus-mode .home-timer-hero .focus-reward-inline,
 body.focus-mode .home-timer-hero .focus-why { display: none !important; }
 body.focus-mode .home-timer-hero .timer-ring {
