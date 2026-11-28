@@ -9,7 +9,7 @@
 
   /* ---------------- constants ---------------- */
   const KEY = 'kensan_state_v1';
-  const BUILD_VERSION = '2026.11.28h';
+  const BUILD_VERSION = '2026.11.28i';
   const AVATARS = ['🔥', '🥷', '🦊', '🐺', '🦅', '🦉', '🧠', '⚔️', '🌙', '🐉', '🧘', '🚀'];
   const TITLES = [
     { lv: 1,  name: '見習い',   en: 'APPRENTICE' },
@@ -1074,29 +1074,31 @@
     const previewTasks = openTasks.slice(0, 2);
 
     return `
+      <div id="home-greeting" class="home-greeting-wrap">
+        <div class="home-hero">
+          <div class="home-hero-main">
+            <div class="hero-eyebrow">${dateLabel} ・ ${li.title.en}</div>
+            <h1 class="home-greeting">${greet}、<span class="accent">${esc(state.profile.name)}</span>。</h1>
+            ${state.profile.why ? `<p class="home-sub">「${esc(state.profile.why)}」</p>` : ''}
+            <div class="home-actions">
+              <button class="btn primary hero-cta" data-action="start-focus">▶ ${state.focus.running ? '集中を再開する' : `${state.settings.focusMin}分 集中する`}</button>
+              <button class="btn" data-action="nav" data-view="quests">✓ 今日のタスク</button>
+            </div>
+          </div>
+          <div class="home-ring">
+            <div class="ring" style="--p:${pct}">
+              <div class="ring-inner"><strong>${t.sessions}<span style="font-size:12px;color:var(--muted)">/${target}</span></strong><span>SESSION</span></div>
+            </div>
+            <div class="home-ring-label">今日の目標<br><strong>あと ${Math.max(0, target - t.sessions)} セッション</strong></div>
+          </div>
+        </div>
+      </div>
+
       <section class="home-timer-hero" id="home-timer-hero">
         <div class="focus-stage">${timerStageHtml()}</div>
       </section>
 
       <div id="home-classic">
-      <div class="home-hero">
-        <div class="home-hero-main">
-          <div class="hero-eyebrow">${dateLabel} ・ ${li.title.en}</div>
-          <h1 class="home-greeting">${greet}、<span class="accent">${esc(state.profile.name)}</span>。</h1>
-          ${state.profile.why ? `<p class="home-sub">「${esc(state.profile.why)}」</p>` : ''}
-          <div class="home-actions">
-            <button class="btn primary hero-cta" data-action="start-focus">▶ ${state.focus.running ? '集中を再開する' : `${state.settings.focusMin}分 集中する`}</button>
-            <button class="btn" data-action="nav" data-view="quests">✓ 今日のタスク</button>
-          </div>
-        </div>
-        <div class="home-ring">
-          <div class="ring" style="--p:${pct}">
-            <div class="ring-inner"><strong>${t.sessions}<span style="font-size:12px;color:var(--muted)">/${target}</span></strong><span>SESSION</span></div>
-          </div>
-          <div class="home-ring-label">今日の目標<br><strong>あと ${Math.max(0, target - t.sessions)} セッション</strong></div>
-        </div>
-      </div>
-
       <div class="quick-stats">
         <button class="stat-tile" data-action="scroll-timer">
           <span class="stat-tile-icon" style="color:var(--motivation)">🔥</span>

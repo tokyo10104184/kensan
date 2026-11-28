@@ -562,6 +562,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .home-timer-hero .timer-controls { margin-top: 44px; gap: 18px; }
 .home-timer-hero .timer-controls .btn { min-width: 160px; padding: 14px 26px; }
 .home-timer-hero .focus-why { margin-top: 34px; }
+.home-greeting-wrap { margin-bottom: 18px; }
 .home-hero {
   display: flex; align-items: center; justify-content: space-between; gap: 26px;
   padding: 28px; border-radius: 22px;
@@ -948,7 +949,8 @@ body.focus-mode .fab { display: none !important; }
 body.focus-mode .main { width: 100%; }
 body.focus-mode .view-container { padding: 0; overflow: hidden; }
 body.focus-mode .view { animation: none !important; }
-body.focus-mode #home-classic { display: none !important; }
+body.focus-mode #home-classic,
+body.focus-mode #home-greeting { display: none !important; }
 body.focus-mode .home-timer-hero {
   position: fixed; inset: 0; z-index: 90;
   min-height: 0; height: 100dvh; margin: 0; padding: 24px;
