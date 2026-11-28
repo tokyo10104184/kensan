@@ -544,22 +544,24 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 
 /* home: 1画面いっぱいのポモドーロ */
 .home-timer-hero {
-  min-height: calc(100vh - 166px);
+  min-height: calc(100vh - 150px);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  position: relative; padding: 6px 0 52px; margin-bottom: 22px;
+  position: relative; padding: 28px 0 72px; margin-bottom: 22px;
 }
 .home-timer-hero .focus-stage {
-  width: 100%; max-width: 760px; min-height: 540px;
-  padding: 52px 28px 46px; justify-content: center;
+  width: 100%; max-width: 860px;
+  min-height: min(760px, calc(100vh - 220px));
+  padding: 78px 36px 68px; justify-content: center; gap: 0;
   background: linear-gradient(160deg, rgba(255,106,77,.07), rgba(181,107,255,.05)), var(--panel);
 }
-.home-timer-hero .mode-tabs { margin-bottom: 22px; }
-.home-timer-hero .timer-ring { width: min(340px, 60vw, 38vh); height: min(340px, 60vw, 38vh); }
-.home-timer-hero .timer-time { font-size: clamp(50px, 8vh, 78px); }
-.home-timer-hero .timer-combo { margin-top: 12px; }
-.home-timer-hero .focus-reward-inline { margin-top: 14px; }
-.home-timer-hero .timer-controls { margin-top: 22px; }
-.home-timer-hero .focus-why { margin-top: 20px; }
+.home-timer-hero .mode-tabs { margin-bottom: 40px; }
+.home-timer-hero .timer-ring { width: min(420px, 68vw, 46vh); height: min(420px, 68vw, 46vh); }
+.home-timer-hero .timer-time { font-size: clamp(58px, 9vh, 94px); }
+.home-timer-hero .timer-combo { margin-top: 20px; }
+.home-timer-hero .focus-reward-inline { margin-top: 24px; }
+.home-timer-hero .timer-controls { margin-top: 44px; gap: 18px; }
+.home-timer-hero .timer-controls .btn { min-width: 160px; padding: 14px 26px; }
+.home-timer-hero .focus-why { margin-top: 34px; }
 .home-hero {
   display: flex; align-items: center; justify-content: space-between; gap: 26px;
   padding: 28px; border-radius: 22px;
@@ -850,14 +852,20 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   .topbar-right { gap: 7px; }
   .view-container { padding: 18px 16px 100px; }
   .home-hero { flex-direction: column; align-items: flex-start; padding: 20px; }
-  .home-timer-hero { min-height: calc(100vh - 186px); padding-bottom: 46px; margin-bottom: 18px; }
-  .home-timer-hero .focus-stage { min-height: 470px; padding: 36px 16px 34px; border-radius: 20px; }
-  .home-timer-hero .mode-tabs { margin-bottom: 14px; flex-wrap: wrap; justify-content: center; }
-  .home-timer-hero .mode-tab { padding: 7px 10px; font-size: 11px; }
-  .home-timer-hero .timer-ring { width: min(250px, 66vw, 34vh); height: min(250px, 66vw, 34vh); }
-  .home-timer-hero .timer-time { font-size: clamp(42px, 7vh, 54px); }
-  .home-timer-hero .timer-controls { margin-top: 18px; }
-  .home-timer-hero .timer-controls .btn { min-width: 0; }
+  .home-timer-hero { min-height: calc(100vh - 176px); padding-bottom: 56px; margin-bottom: 18px; }
+  .home-timer-hero .focus-stage {
+    min-height: min(640px, calc(100vh - 240px));
+    padding: 52px 18px 46px; border-radius: 20px;
+  }
+  .home-timer-hero .mode-tabs { margin-bottom: 28px; flex-wrap: wrap; justify-content: center; }
+  .home-timer-hero .mode-tab { padding: 9px 13px; font-size: 11px; }
+  .home-timer-hero .timer-ring { width: min(320px, 76vw, 40vh); height: min(320px, 76vw, 40vh); }
+  .home-timer-hero .timer-time { font-size: clamp(48px, 8vh, 68px); }
+  .home-timer-hero .timer-combo { margin-top: 16px; }
+  .home-timer-hero .focus-reward-inline { margin-top: 18px; }
+  .home-timer-hero .timer-controls { margin-top: 30px; gap: 12px; }
+  .home-timer-hero .timer-controls .btn { min-width: 0; padding: 13px 18px; }
+  .home-timer-hero .focus-why { margin-top: 24px; }
   .rpg-boss-empty { flex-direction: column; align-items: flex-start; }
   .rpg-roster { grid-template-columns: repeat(3, 1fr); }
   .home-ring { width: 100%; justify-content: flex-start; }
@@ -918,13 +926,17 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 }
 
 @media (min-width: 821px) and (max-height: 820px) {
-  .home-timer-hero { padding-bottom: 38px; }
-  .home-timer-hero .focus-stage { min-height: 440px; padding: 32px 24px 28px; }
-  .home-timer-hero .mode-tabs { margin-bottom: 12px; }
-  .home-timer-hero .timer-combo { margin-top: 8px; }
-  .home-timer-hero .focus-reward-inline { margin-top: 8px; }
-  .home-timer-hero .timer-controls { margin-top: 14px; }
-  .home-timer-hero .focus-why { margin-top: 12px; }
+  .home-timer-hero { padding-bottom: 48px; }
+  .home-timer-hero .focus-stage {
+    min-height: min(600px, calc(100vh - 180px));
+    padding: 48px 30px 40px;
+  }
+  .home-timer-hero .mode-tabs { margin-bottom: 24px; }
+  .home-timer-hero .timer-ring { width: min(360px, 60vw, 40vh); height: min(360px, 60vw, 40vh); }
+  .home-timer-hero .timer-combo { margin-top: 14px; }
+  .home-timer-hero .focus-reward-inline { margin-top: 16px; }
+  .home-timer-hero .timer-controls { margin-top: 26px; }
+  .home-timer-hero .focus-why { margin-top: 20px; }
 }
 
 /* ---------------- full-screen focus mode ---------------- */
