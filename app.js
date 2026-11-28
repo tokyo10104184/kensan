@@ -9,7 +9,7 @@
 
   /* ---------------- constants ---------------- */
   const KEY = 'kensan_state_v1';
-  const BUILD_VERSION = '2026.11.28j';
+  const BUILD_VERSION = '2026.11.28k';
   const AVATARS = ['🔥', '🥷', '🦊', '🐺', '🦅', '🦉', '🧠', '⚔️', '🌙', '🐉', '🧘', '🚀'];
   const TITLES = [
     { lv: 1,  name: '見習い',   en: 'APPRENTICE' },
@@ -1036,11 +1036,18 @@
       if (el.dataset.action === 'nav') el.classList.toggle('active', el.dataset.view === state.view);
     });
   }
-  // ホームの先頭では上部バーを畳み、スクロールし始めたら引き下げて表示する。
+  // ホーム先頭では上部バーを畳む。スクロールが進んでから引き下げ、戻るときは先頭付近で畳む（ヒステリシス）。
+  const TOPBAR_SHOW_AT = 42;
+  const TOPBAR_HIDE_AT = 8;
   function updateTopbarVisibility() {
     const viewEl = $('#view');
-    const atTop = state.view === 'home' && (viewEl ? viewEl.scrollTop : 0) <= 8;
-    document.body.classList.toggle('home-bar-hidden', atTop);
+    const y = viewEl ? viewEl.scrollTop : 0;
+    const hidden = document.body.classList.contains('home-bar-hidden');
+    let shouldHide;
+    if (state.view !== 'home') shouldHide = false;
+    else if (hidden) shouldHide = y < TOPBAR_SHOW_AT;
+    else shouldHide = y <= TOPBAR_HIDE_AT;
+    document.body.classList.toggle('home-bar-hidden', shouldHide);
   }
   function renderAll() {
     renderTopbar();
